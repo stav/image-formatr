@@ -24,17 +24,6 @@ if (!class_exists("ImageFormatrAdmin")) {
                 'xcludclass'=> "wp-smiley",
                 'uninstal'  => "",
                 'prettyuse' => "on",
-                'highcode'  =>
-"hs.showCredits = false;
-hs.captionEval = 'this.a.title';
-hs.transitions = ['expand', 'crossfade'];
-hs.fadeInOut   = true;
-hs.dimmingOpacity = 0.8;
-if (hs.addSlideshow) hs.addSlideshow({
-    interval: 0,
-    repeat: true,
-    useControls: false
-});",
                 # legacy options used for deactivation removal
                 'yanktit'   => null,
                 'homelong'  => null,
@@ -45,7 +34,7 @@ if (hs.addSlideshow) hs.addSlideshow({
         {
             $this->option_descriptions = Array(
                 'yankit'    => __('Blank out the image title.', IMAGEFORMATR_TEXTDOMAIN). " <code>&lt;img title=&quot;&quot;/&gt;</code> NOTE: this will override the <em>Title replacement</em> option below.",
-                'dofx'      => __('Wrap the image in a Highslide popup zoom anchor.', IMAGEFORMATR_TEXTDOMAIN). " <code>&lt;a class=&quot;highslide&quot;&gt;&lt;img/&gt;&lt;/a&gt;</code>",
+                'dofx'      => __('Wrap the image in a popup zoom anchor.', IMAGEFORMATR_TEXTDOMAIN). " <code>&lt;a rel=&quot;prettyPhoto&quot;&gt;&lt;img/&gt;&lt;/a&gt;</code>",
                 'killanc'   => __('Ignore any image anchors in the post.', IMAGEFORMATR_TEXTDOMAIN). " This option will be overridden with an image's <code>usemya</code> attribute. <code>&lt;a href=&quot;dont-ignore-me.html&quot;&gt;&lt;img usemya=&quot;true&quot;/&gt;&lt;/a&gt;</code>",
                 'force'     => __('Force relative parent location of images to the root.', IMAGEFORMATR_TEXTDOMAIN). " Interpret <code>&lt;img src=&quot;../images/1.jpg&quot;/&gt;</code> as <code>&lt;img src=&quot;/images/1.jpg&quot;/&gt;</code> which helped when I changed my permalinks.",
                 'stdthumb'  => "Try to size all the thumbnails to the dimensions below even if you have width &amp; height set in your image tags.  So, enable this if you want to ignore any width &amp; height settings in your image tags.  This option will be overridden with an image's <code>usemysize</code> attribute.  <code>&lt;img usemysize=&quot;true&quot; width=&quot;200&quot; height=&quot;132&quot;/&gt;</code>",
@@ -55,7 +44,6 @@ if (hs.addSlideshow) hs.addSlideshow({
                 'remclass'  => "Enter a space-separated list of classes to remove from the image container div.",
                 'xcludclass'=> "Enter a space-separated list of classes to exclude images from processing, i.e. images with these classes will not be touched, just displayed &quot;as-is&quot;. Note: <tt>wp-smiley</tt> is the class used by Wordpress <em>emoticons</em>. Example: <code>wp-smiley exclude-me-class excludemetoo</code>",
                 'prettyuse' => "Use the prettyPhoto library included with the Image Formatr plugin?  Uncheck this option to disable the pre-bundled prettyPhoto JavaScript Image library from loading as well as the prettyPhoto Settings below.  If you uncheck this option and have the Popup Effects setting checked above then you need to include your own image viewer library in your theme or in an integration plugin.",
-                'highcode'  => "<p>Note: do not include the <code>hs.graphicsDir</code> setting, it is pre-configured.</p><p><strong>Be careful:</strong> these lines execute as JavaScript and are for advanced users who want to edit the <a href='http://highslide.com/ref/'>Highslide settings</a>. If you don't know what you're doing, leave the defaults.</p>",
                 'uninstal'  => "Remove all Image Formatr settings from the database upon plugin deactivation?              Check this box if you want to automatically uninstall this plugin when you deactivate it.               This will clean up the database but you will loose all your settings and you will have the default settings if you re-activate it. If you're not sure, don't check it.",
             );
 
@@ -91,8 +79,21 @@ if (hs.addSlideshow) hs.addSlideshow({
             add_settings_field('remclass'  , 'Remove classes'    , array($this, 'admin_form_textbox' ), __FILE__, 'adv_section', 'remclass'  );
             add_settings_field('xcludclass', 'Exclude classes'   , array($this, 'admin_form_textbox' ), __FILE__, 'adv_section', 'xcludclass');
             add_settings_field('prettyuse' , 'PrettyPhoto enabled',array($this, 'admin_form_checkbox'), __FILE__, 'adv_section', 'prettyuse' );
-            add_settings_field('highcode'  , 'Highslide settings', array($this, 'admin_form_textarea'), __FILE__, 'adv_section', 'highcode'  );
             add_settings_field('uninstal'  , 'Uninstall'         , array($this, 'admin_form_checkbox'), __FILE__, 'adv_section', 'uninstal'  );
+
+            add_settings_section(
+                'flickr_section',
+                'Flickr settings',
+                array($this, 'admin_overview'),
+                __FILE__);
+
+            add_settings_field('flenable'  , 'Enable Flickr', array($this, 'admin_form_checkbox'), __FILE__, 'flickr_section', 'flenable'  );
+            add_settings_field('flusername', 'Username'     , array($this, 'admin_form_textbox' ), __FILE__, 'flickr_section', 'flusername');
+            add_settings_field('flnsid'    , 'NSID'         , array($this, 'admin_form_textbox' ), __FILE__, 'flickr_section', 'flnsid'    );
+            add_settings_field('flfrob'    , 'Frob'         , array($this, 'admin_form_textbox' ), __FILE__, 'flickr_section', 'flfrob'    );
+            add_settings_field('fltoken'   , 'Token'        , array($this, 'admin_form_textbox' ), __FILE__, 'flickr_section', 'fltoken'   );
+            add_settings_field('flapikey'  , 'API key'      , array($this, 'admin_form_textbox' ), __FILE__, 'flickr_section', 'flapikey'  );
+            add_settings_field('flsecret'  , 'Secret'       , array($this, 'admin_form_textbox' ), __FILE__, 'flickr_section', 'flsecret'  );
         }
 
         function admin_form_dropdown ( $f )
@@ -254,14 +255,6 @@ die();
                 delete_option($old_key1); // remove legacy options
                 delete_option($old_key2); // remove legacy options
             }
-
-            // if the current setting for highslide is the default, then
-            // try to import the Highslide Integration plugin settings
-            if( $this->def_options['highcode'] == $this->options['highcode'] )
-                if (get_option('hi_jsSettings')) {
-                    $highcode = preg_replace("/\s*hs.graphicsDir\s*=.+;/", '', get_option('hi_jsSettings')); // pull the graphicsDir setting out
-                    $this->options['highcode'] = strip_tags($highcode);
-                }
 
             // a bit of a hack
             // if the Additional classes setting is blank (upgrade from

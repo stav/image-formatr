@@ -42,6 +42,7 @@ if (!class_exists("ImageFormatr")) {
         // load plugin settings
         function init()
         {
+            // main settings
             $this->caption_att     =            $this->get_option('capatt') ? $this->get_option('capatt') : 'title'; // attribute to be used for image caption
             $this->strip_title     =            $this->get_option('yankit') ? true : false; // should "title" attribute be stripped?
             $this->add_class       =            $this->get_option('addclass' ); // list of css classes to add to the container div
@@ -51,6 +52,17 @@ if (!class_exists("ImageFormatr")) {
             $this->addl_img_width  = abs(intval($this->get_option('img2long' )));
             $this->addl_img_height = abs(intval($this->get_option('img2short')));
             $this->addl_page       =     intval($this->get_option('img2page' ));
+
+            // flickr settings
+            $this->flickr           = new stdClass();
+            $this->flickr->loaded   =          false;
+            $this->flickr->enable   = (boolean)$this->get_option('flenable'  );
+            $this->flickr->username =          $this->get_option('flusername');
+            $this->flickr->nsid     =          $this->get_option('flnsid'    );
+            $this->flickr->frob     =          $this->get_option('flfrob'    );
+            $this->flickr->token    =          $this->get_option('fltoken'   );
+            $this->flickr->apikey   =          $this->get_option('flapikey'  );
+            $this->flickr->secret   =          $this->get_option('flsecret'  );
 
             // remove class list
             foreach( explode(' ', $this->get_option('remclass')) as $class )
@@ -110,7 +122,7 @@ if (!class_exists("ImageFormatr")) {
             }
 
             ////////////////////////////////        [flickr                ]
-            if ($this->flickr_settings) {
+            if ($this->flickr->enable) {
                 $content = preg_replace_callback('/\[flickrset\s+id="(\d+)"\]/', array($this, 'do_shortcode_flickrset'), $content);
                 $content = preg_replace_callback('/\[flickr\s+pid="(\d+)"\]/'  , array($this, 'do_shortcode_flickr'   ), $content);
                #$content = preg_replace_callback("/\[flickr[^\]]+\]/"          , array($this, 'do_shortcode_flickr'   ), $content);
@@ -136,17 +148,16 @@ if (!class_exists("ImageFormatr")) {
          */
         function load_flickr_data ( )
         {
-// $debug_sma_eval ='$this->flickr_loaded';$debug_sma_title =__METHOD__.':'.__LINE__;include('debug_output_sma.php'); #SMA
-// $debug_sma_eval ='$this->flickr_settings';$debug_sma_title =__METHOD__.':'.__LINE__;include('debug_output_sma.php'); #SMA
-            if(  $this->flickr_loaded   ) return true;
-            if( !$this->flickr_settings ) return false;
-            $this-> flickr_loaded = true;
+// $debug_sma_eval ='$this->flickr';$debug_sma_title =__METHOD__.':'.__LINE__;include('debug_output_sma.php'); #SMA
+            if(  $this->flickr->loaded ) return true;
+            if( !$this->flickr->enable ) return false;
+            $this->flickr->loaded = true;
             $this-> flickr_photos = array();
             $page = 0;
 
             $params = array(
-                'user_id'        => $this-> flickr_settings['nsid'],
-                'auth_token'     => $this-> flickr_settings['token'],
+                'user_id'        => $this->flickr->nsid,
+                'auth_token'     => $this->flickr->token,
                 'extras'         => 'last_update,tags,url_m,url_l',
                 'privacy_filter' =>  1, // public photos
                 'content_type'   =>  1, // photos only
@@ -222,7 +233,7 @@ IMAGE;
 
             $params = array(
                 'photoset_id'    => $matches[1],
-                'auth_token'     => $this->flickr_settings['token'],
+                'auth_token'     => $this->flickr->token,
                 'extras'         => 'last_update,tags,url_sq,url_l',
                 'privacy_filter' =>  1, // public photos
                 );
@@ -331,10 +342,10 @@ IMAGE;
                 $image_atts['src'] = substr($image_atts['src'], 2);
 
             // Flickr hack
-$debug_sma_eval ='$image_atts["flickr"]';$debug_sma_title =__METHOD__.':'.__LINE__;include('debug_output_sma.php'); #SMA
+// $debug_sma_eval ='$image_atts["flickr"]';$debug_sma_title =__METHOD__.':'.__LINE__;include('debug_output_sma.php'); #SMA
             if( $image_atts['flickr'] ) {
 // $debug_sma_eval ='$this->load_flickr_data()';$debug_sma_title =__METHOD__.':'.__LINE__;include('debug_output_sma.php'); #SMA
-$debug_sma_eval ='array_key_exists( $image_atts["flickr"], $this->flickr_photos )';$debug_sma_title =__METHOD__.':'.__LINE__;include('debug_output_sma.php'); #SMA
+// $debug_sma_eval ='array_key_exists( $image_atts["flickr"], $this->flickr_photos )';$debug_sma_title =__METHOD__.':'.__LINE__;include('debug_output_sma.php'); #SMA
                 if( $this->load_flickr_data() and array_key_exists( $image_atts['flickr'], $this->flickr_photos ) ) {
                                                 $image_atts['src'  ] = $this->flickr_photos[$image_atts['flickr']]['url_l'];
                    #if( !$image_atts['thumb'] ) $image_atts['thumb'] = $this->flickr_photos[$image_atts['flickr']]['url_m'];

@@ -3,7 +3,7 @@
   * Plugin Name: Image Formatr
   * Plugin URI: http://warriorself.com/blog/about/image-formatr/
   * Description: Formats all content images on a page / post giving them borders and captions.
-  * Version: 0.10.0
+  * Version: 0.10.1
   * Author: Steven Almeroth
   * Author URI: http://warriorship.org/sma/
   * License: GPL2
@@ -26,7 +26,7 @@
   *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   */
 define ('IMAGEFORMATR_TEXTDOMAIN', 'image-formatr');
-define( 'IMAGEFORMATR_VERSION'   , '0.10.0');
+define( 'IMAGEFORMATR_VERSION'   , '0.10.1');
 
 include_once(dirname(__FILE__) . '/class.formatr.php');
 
@@ -45,8 +45,4 @@ if (class_exists("ImageFormatr")) {
 
     // filters
     add_filter('the_content', array($image_formatr_instance, 'filter'), 10);
-
-    // see if we have the flickr settings in the database
-    $image_formatr_instance->flickr_settings = get_option(IMAGEFORMATR_TEXTDOMAIN.'_flickr');
-#die(print_r($image_formatr_instance, true));
 }

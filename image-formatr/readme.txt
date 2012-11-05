@@ -4,7 +4,7 @@ Tags: images, caption, formatting, post, page
 Requires at least: 2.7
 Tested up to: 3.3.2
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=sroth77@gmail.com&item_name=Image+Formatr+Wordpress+plugin
-Stable tag: 0.10.0
+Stable tag: 0.10.1
 
 Formats all content images on a page / post giving them borders and captions.
 
@@ -41,15 +41,15 @@ thanks.
 
 After the plugin runs, the output to the browser looks like:
 
-    <div class="img alignright" style="width: 140px;">
+    <div class="img alignright">
     <a
       href="/images/picture.jpg"
-      class="highslide"
-      onclick="return hs.expand(this, { slideshowGroup: 'main' })"
+      rel="prettyPhoto[main]"
     ><img
       src="/images/picture.jpg"
       title="Image borrowed from example.com" alt=""
       width="140" height="90"
+      alt=""
     ></a>
     <div style="width: 100%;">
       <a href="http://example.com/" target="_blank">A sample caption</a>
@@ -57,12 +57,6 @@ After the plugin runs, the output to the browser looks like:
     </div>
 
 &nbsp;
-
-= Requirements =
-
-No external requirements are needed.  The Highslide JavaScript library is
-now packaged in the Image-formatr plugin itself.  The Highslide Integration
-plugin used in previous versions of Image-formatr is no longer needed.
 
 = Features =
 
@@ -195,7 +189,7 @@ You can also add the following html anywhere in your theme output:
 * add admin option to configure the plugin priority
 * add admin option for html/xhtml &lt;img/&gt; closing tags
 * add admin option for moving title attribute to alt attribute should it overwrite an existing alt?
-* add admin option for name to use for default highslide slideshow group
+* add admin option for name to use for default prettyPhoto slideshow group
 * debug mode could show images not found and whatnots and profiling stats
 * change [flickrset id="1234"] to [flickr set="1234"]
 * change [flickr pid="123"] to [flickr img="123"]
@@ -222,7 +216,7 @@ You can also add the following html anywhere in your theme output:
 
 == Current Buglist ==
 
-* bug: if you click too early, before the highslide loads, the anchor
+* bug: if you click too early, before the image viewer loads, the anchor
     is still "live" and will not use ajax, i.e the new url will load
     which is the normal anchor behaviour
 * bug: add_settings_field() &lt;label for="s"&gt; not &lt;label for="stdthumb"&gt;

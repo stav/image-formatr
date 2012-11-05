@@ -8,7 +8,7 @@ if (!class_exists("ImageFormatrBase")) {
         const SINGLE     = 2;
         const NOT_SINGLE = 3;
 
-        // highslide slideshow group
+        // image viewer slideshow group
         var $group = "main";
 
         // the image class list to remove
@@ -17,14 +17,8 @@ if (!class_exists("ImageFormatrBase")) {
         // the image class exclusion list
         var $exclude_classes = array();
 
-        // Flickr
-        var $flickr_loaded = false;
-        var $api_key = "0d3960999475788aee64408b64563028";
-        var $secret = "b1e94e2cb7e1ff41";
-
         /**
-         * Add the highslide JavaScript and the ImageFormatr stylesheet
-         * to the HTML head tag.
+         * Add the image viewer resources.
          */
         function enqueue()
         {
@@ -124,7 +118,7 @@ FOOTER;
         function getSignature($params) {
             ksort($params);
 
-            $api_sig = $this->secret;
+            $api_sig = $this->flickr->secret;
 
             foreach ($params as $k => $v){
                 $api_sig .= $k . $v;
@@ -140,7 +134,7 @@ FOOTER;
         {
             if( !is_array($params) ) $params = array();
 
-            $call_includes = array('api_key' => $this->api_key,
+            $call_includes = array('api_key' => $this->flickr->apikey,
                                    'method'  => $method,
                                    'format'  => $rsp_format);
 
