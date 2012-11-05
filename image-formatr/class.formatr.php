@@ -35,7 +35,8 @@ if (!class_exists("ImageFormatr")) {
 
         function ImageFormatr()
         {
-            $this->options = get_option('plugin_image-formatr');
+            $this->settings_name = 'plugin_' . IMAGEFORMATR_TEXTDOMAIN;  // Wordpress settings table entry name
+            $this->options = get_option($this->settings_name);
             $this->init();
         }
 
@@ -107,7 +108,6 @@ if (!class_exists("ImageFormatr")) {
 
         function filter ( $content )
         {
-// $debug_sma_eval ='$content';$debug_sma_title =__METHOD__.':'.__LINE__;include('debug_output_sma.php'); #SMA
             // if we are displaying a page that meets the additional-page
             // criteria (e.g. single), then we use the additional dimensions
             if ( ($this->addl_page == self::FRONT      and  is_front_page())
@@ -134,7 +134,6 @@ if (!class_exists("ImageFormatr")) {
             // regular img tags ////////////      <p>   <a     >      <img      / >     <    /a>     < /p>   insensitive-case
             $content = preg_replace_callback("/(?:<p>)?(<a[^>]*>)?\s*(<img[^>]*\/?>)\s?(<\s*\/a>)?(?:<\/p>)?/i", array($this, 'parse'), $content);
 
-// $debug_sma_eval ='$content';$debug_sma_title =__METHOD__.':'.__LINE__;include('debug_output_sma.php'); #SMA
             return $content;
         }
 
@@ -148,7 +147,6 @@ if (!class_exists("ImageFormatr")) {
          */
         function load_flickr_data ( )
         {
-// $debug_sma_eval ='$this->flickr';$debug_sma_title =__METHOD__.':'.__LINE__;include('debug_output_sma.php'); #SMA
             if(  $this->flickr->loaded ) return true;
             if( !$this->flickr->enable ) return false;
             $this->flickr->loaded = true;
@@ -180,7 +178,6 @@ if (!class_exists("ImageFormatr")) {
                 $this-> flickr_photos[$photo['id']] = $photo;
             }
 
-// $debug_sma_eval ='$this->flickr_photos';$debug_sma_title =__METHOD__.':'.__LINE__;include('debug_output_sma.php'); #SMA
             return count($this->flickr_photos);
         }
 
@@ -206,7 +203,6 @@ if (!class_exists("ImageFormatr")) {
          */
         function do_shortcode_flickr ( $matches )
         {
-#$debug_sma_eval ='$matches';$debug_sma_title =__METHOD__.':'.__LINE__;include('debug_output_sma.php'); #SMA
             if( count($matches) < 2 ) return '';
             if( !$this->load_flickr_data() ) return '';
 
@@ -265,7 +261,6 @@ IMAGE;
          */
         function parse ( $matches )
         {
-// $debug_sma_eval ='$matches';$debug_sma_title =__METHOD__.':'.__LINE__;include('debug_output_sma.php'); #SMA
             $image_atts  = array();
             $orig_markup = $matches[0];
 
@@ -342,10 +337,7 @@ IMAGE;
                 $image_atts['src'] = substr($image_atts['src'], 2);
 
             // Flickr hack
-// $debug_sma_eval ='$image_atts["flickr"]';$debug_sma_title =__METHOD__.':'.__LINE__;include('debug_output_sma.php'); #SMA
             if( $image_atts['flickr'] ) {
-// $debug_sma_eval ='$this->load_flickr_data()';$debug_sma_title =__METHOD__.':'.__LINE__;include('debug_output_sma.php'); #SMA
-// $debug_sma_eval ='array_key_exists( $image_atts["flickr"], $this->flickr_photos )';$debug_sma_title =__METHOD__.':'.__LINE__;include('debug_output_sma.php'); #SMA
                 if( $this->load_flickr_data() and array_key_exists( $image_atts['flickr'], $this->flickr_photos ) ) {
                                                 $image_atts['src'  ] = $this->flickr_photos[$image_atts['flickr']]['url_l'];
                    #if( !$image_atts['thumb'] ) $image_atts['thumb'] = $this->flickr_photos[$image_atts['flickr']]['url_m'];
@@ -370,7 +362,6 @@ IMAGE;
          */
         function format ( $param )
         {
-#$debug_sma_eval ='$param';$debug_sma_title =__METHOD__.':'.__LINE__;include('debug_output_sma.php'); #SMA
             // setup dimensions width & height /////////////////////////////////
 
             // default dimensions

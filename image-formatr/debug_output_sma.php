@@ -32,6 +32,7 @@
  * @author Steven Almeroth
  * @note Requires PHP 4
  * @todo eval code should filter errors for undefined vars
+ * @sample $debug_sma_eval ='$this->options["uninstal"]';$debug_sma_title =__METHOD__.':'.__LINE__;include('debug_output_sma.php'); #SMA
  */
 
   defined('NEWLINE') or define('NEWLINE', chr(10));

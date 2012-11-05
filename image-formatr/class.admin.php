@@ -49,7 +49,7 @@ if (!class_exists("ImageFormatrAdmin")) {
 
             register_setting(
                 IMAGEFORMATR_TEXTDOMAIN,         // group
-                'plugin_image-formatr',          // option name in settings table
+                $this->settings_name,            // option name in settings table
                 array($this, 'admin_validate')); // sanitize callback function
 
             add_settings_section(
@@ -105,7 +105,7 @@ if (!class_exists("ImageFormatrAdmin")) {
                 $options .= "<option value='$item' $selected>$item</option>\n";
             }
             echo <<< INPUT
-                <select id="$f" name="plugin_image-formatr[$f]">
+                <select id="$f" name="$this->settings_name[$f]">
                     $options
                 </select>
                 $desc
@@ -118,7 +118,7 @@ INPUT;
             $desc = array_key_exists($f, $this->option_descriptions) ? $this->option_descriptions[$f] : '';
             $checked = $this->options[$f] ? 'checked="checked" ' : '';
             echo <<< INPUT
-                <input type="checkbox" id="$f" name="plugin_image-formatr[$f]" $checked/>
+                <input type="checkbox" id="$f" name="$this->settings_name[$f]" $checked/>
                 $desc
 INPUT;
         }
@@ -127,7 +127,7 @@ INPUT;
         {
             $desc = array_key_exists($f, $this->option_descriptions) ? $this->option_descriptions[$f] : '';
             echo <<< INPUT
-                <textarea id="$f" name="plugin_image-formatr[$f]" rows="5" cols="50">{$this->options[$f]}</textarea>
+                <textarea id="$f" name="$this->settings_name[$f]" rows="5" cols="50">{$this->options[$f]}</textarea>
                 $desc
 INPUT;
         }
@@ -136,7 +136,7 @@ INPUT;
         {
             $desc = array_key_exists($f, $this->option_descriptions) ? $this->option_descriptions[$f] : '';
             echo <<< INPUT
-                <input type="text" id="$f" name="plugin_image-formatr[$f]" value="{$this->options[$f]}" />
+                <input type="text" id="$f" name="$this->settings_name[$f]" value="{$this->options[$f]}" />
                 $desc
 INPUT;
         }
@@ -144,9 +144,9 @@ INPUT;
         function admin_form_def_dims ( )
         {
             echo <<< INPUT
-              <input type="text" name="plugin_image-formatr[imglong]"  id="imglong"  value="{$this->options['imglong']}" size="5" />
+              <input type="text" name="$this->settings_name[imglong]"  id="imglong"  value="{$this->options['imglong']}" size="5" />
               x
-              <input type="text" name="plugin_image-formatr[imgshort]" id="imgshort" value="{$this->options['imgshort']}" size="5" />
+              <input type="text" name="$this->settings_name[imgshort]" id="imgshort" value="{$this->options['imgshort']}" size="5" />
               These values will be used as the width &amp; height in pixels by the <em>Auto determine orientation</em> setting
               which, if disabled will default to the <code>width</code> in the first box and the <code>height</code> in second box.
               NOTE: leave one of the boxes blank (or zero) and it will be calculated using the aspect ratio to the other box.
@@ -158,14 +158,14 @@ INPUT;
             $checked = Array('', '', '', '');
             $checked[$this->options['img2page']] = "checked";
             echo <<< INPUT
-              <input type="text" name="plugin_image-formatr[img2long]"  id="img2long"  value="{$this->options['img2long']}" size="5" />
+              <input type="text" name="$this->settings_name[img2long]"  id="img2long"  value="{$this->options['img2long']}" size="5" />
               x
-              <input type="text" name="plugin_image-formatr[img2short]" id="img2short" value="{$this->options['img2short']}" size="5" />
+              <input type="text" name="$this->settings_name[img2short]" id="img2short" value="{$this->options['img2short']}" size="5" />
               =
-              <input type="radio" name="plugin_image-formatr[img2page]" id="img2page0" value="0" {$checked[0]} /> <label for="img2page0">front</label> |
-              <input type="radio" name="plugin_image-formatr[img2page]" id="img2page1" value="1" {$checked[1]} /> <label for="img2page1">not front</label> |
-              <input type="radio" name="plugin_image-formatr[img2page]" id="img2page2" value="2" {$checked[2]} /> <label for="img2page2">single</label> |
-              <input type="radio" name="plugin_image-formatr[img2page]" id="img2page3" value="3" {$checked[3]} /> <label for="img2page3">not single</label> /
+              <input type="radio" name="$this->settings_name[img2page]" id="img2page0" value="0" {$checked[0]} /> <label for="img2page0">front</label> |
+              <input type="radio" name="$this->settings_name[img2page]" id="img2page1" value="1" {$checked[1]} /> <label for="img2page1">not front</label> |
+              <input type="radio" name="$this->settings_name[img2page]" id="img2page2" value="2" {$checked[2]} /> <label for="img2page2">single</label> |
+              <input type="radio" name="$this->settings_name[img2page]" id="img2page3" value="3" {$checked[3]} /> <label for="img2page3">not single</label> /
               Thumbnail dimensions if you want to specify different settings for the front page or the single display page or everything else.
               See <em>Thumbnail dimensions (default)</em> setting for description.
 INPUT;
@@ -202,18 +202,11 @@ INPUT;
 
             // the checkbox fields will not be present in the $input
             // so they need to be manually set to false if absent
-            $checkboxes = Array('yankit', 'dofx', 'killanc', 'force', 'stdthumb', 'uninstal', 'inspect', 'prettyuse');
+            $checkboxes = Array('yankit', 'dofx', 'killanc', 'force', 'stdthumb', 'uninstal', 'inspect', 'prettyuse', 'flenable');
             foreach( $checkboxes as $checkbox )
                 if( !array_key_exists($checkbox, $input) )
                     $this->options[$checkbox] = '';
 
-/*
-echo "<pre>options ".print_r($this->options, true)."</pre>";
-echo "<pre>input ".print_r($input, true)."</pre>";
-echo "<pre>integers ".print_r($integers, true)."</pre>";
-echo "<pre>checkboxes ".print_r($checkboxes, true)."</pre>";
-die();
-*/
             return $this->options;
         }
 
@@ -223,7 +216,7 @@ die();
                 if( !is_numeric($input[$fieldname])
                  or $input[$fieldname] < 0
                  or sprintf("%.0f", $input[$fieldname]) != $input[$fieldname] )
-                    add_settings_error('plugin_image-formatr', 'settings_updated', __("Only positive integers should be used as $fieldname."));
+                    add_settings_error($this->settings_name, 'settings_updated', __("Only positive integers should be used as $fieldname."));
         }
 
         function options_page()
@@ -262,17 +255,15 @@ die();
             if( !$this->options['addclass'] )
                 $this->options['addclass'] = $this->def_options['addclass'];
 
-            update_option('plugin_image-formatr', $this->options);
+            update_option($this->settings_name, $this->options);
             $this->init();
         }
 
         function deactivate()
         {
             // uninstall all options from the database
-#$debug_sma_eval ='$this->options["uninstal"]';$debug_sma_title =__METHOD__.':'.__LINE__;include('debug_output_sma.php'); #SMA
-#$debug_sma_eval ='$this';$debug_sma_title =__METHOD__.':'.__LINE__;include('debug_output_sma.php'); #SMA
             if( $this->options['uninstal'] ) {
-                delete_option('plugin_image-formatr');
+                delete_option($this->settings_name);
                 // delete any leftover legacy option straggelers
                 foreach ($this->def_options as $option => $value)
                     delete_option(IMAGEFORMATR_TEXTDOMAIN."_$option");

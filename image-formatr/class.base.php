@@ -143,7 +143,6 @@ FOOTER;
             if ($sign) $params = array_merge($params, array('api_sig' => $this->getSignature($params)));
 
             $url = "http://api.flickr.com/services/rest/?" . http_build_query($params);
-#$debug_sma_eval ='$url';$debug_sma_title =__METHOD__.':'.__LINE__;include('debug_output_sma.php'); #SMA
 
             return $this->getRequest($url);
         }
