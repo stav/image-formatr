@@ -25,9 +25,10 @@ if (!class_exists("ImageFormatrAdmin")) {
                 'uninstal'  => "",
                 'prettyuse' => "on",
                 # legacy options used for deactivation removal
-                'yanktit'   => null,
+                'highuse'   => null,
                 'homelong'  => null,
                 'homeshort' => null,
+                'yanktit'   => null,
         );
 
         function admin_init ( )

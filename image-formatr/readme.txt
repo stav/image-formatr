@@ -2,9 +2,9 @@
 Contributors: huntermaster
 Tags: images, caption, formatting, post, page
 Requires at least: 2.7
-Tested up to: 3.3.2
+Tested up to: 3.4.2
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=sroth77@gmail.com&item_name=Image+Formatr+Wordpress+plugin
-Stable tag: 0.10.1
+Stable tag: 0.10.0
 
 Formats all content images on a page / post giving them borders and captions.
 
