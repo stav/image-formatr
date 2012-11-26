@@ -20,7 +20,7 @@ images on a post/page:
 Thumbnails are not generated, the actual image is displayed in a smaller
 size by telling the browser the preferred display dimensions.
 
-*Note: **Flickr** support is slated for the next release, version 0.9.8.*
+*Note: **Flickr** support added in version 0.10.0.*
 
 I would love your feedback!
 sroth77 is now at gmail.com
@@ -60,20 +60,23 @@ After the plugin runs, the output to the browser looks like:
 
 = Features =
 
+  * Supports displaying images from Flickr: &lt;img flickr="1234567890"
+    title="The magnificent Ceiba at the Archeological Site of Palenque."&gt;
   * Generates image captions using the image `title` or `alt`
   * Shows all content images on the blog as small thumbnails
-  (does not create new thumbnail images)
+    (does not create new thumbnail images)
   * Standardizes all thumbnails with zero post changes
   * Allows for fine-grained control of each image's format
   * Zooms image to large size when clicked using the
-  [prettyPhoto](http://www.no-margin-for-errors.com/projects/prettyPhoto/) library
+    [prettyPhoto](http://www.no-margin-for-errors.com/projects/prettyPhoto/)
+    library
   * Outputs standard XHTML compliant markup
-  * Support BBCode [img] shortcodes
+  * Supports BBCode [img] shortcodes
 
 == Credits ==
 
 Image Formatr is Copyright 2012 [Steven Almeroth](sroth77@gmail.com) and
-licensed under the GPL2 license
+licensed under a GPL license
 
 Based on: [image-caption](http://wordpress.org/extend/plugins/image-caption/)
 by [Yaosan Yeo](http://www.channel-ai.com/blog/)
@@ -143,16 +146,16 @@ More information, including how to contact me, is available at
 
 == Frequently Asked Questions ==
 
-1. *Wordpress "smiley" emoticons like `:)` keep showing up with the other
+1.) *Wordpress "smiley" emoticons like `:)` keep showing up with the other
 images.  How can I prevent smileys from being effected?*
 
-Version 0.9.6 includes a *class exclusion list* which prevents an image
-from being processed by the plugin if it contains a CSS class that is in
-the list.  Wordpress uses "wp-smiley" for their smileys so enter `wp-smiley`
-into the exclusion classes in the Wordpress administration settings for
-Image-formatr then click "Update Options".
+Starting with version 0.9.6 this plugin includes a *class exclusion list* which
+prevents an image from being processed by the plugin if it contains a CSS class
+that is in the list.  Wordpress uses "wp-smiley" for their smileys so enter
+`wp-smiley` into the exclusion classes in the Wordpress administration settings
+for Image-formatr then click "Update Options".
 
-2. *These image attributes (e.g. page, nocap, link, etc) are not XHTML
+2.) *These image attributes (e.g. page, nocap, link, etc) are not XHTML
 standard attributes.  Why do you use them?*
 
 The Image Formatr *override* attributes do not get written to the browser.
@@ -160,24 +163,6 @@ They are only used by the plugin for format configuration of individual
 images.  Unless you specify the `asis` attribute, all images in your content
 are deconstructed then rebuilt sending only XHTML compliant markup to the
 client.
-
-3. *Is it possible to change the caption background color?*
-
-Edit the file `image-formatr.css` around line 27 change:
-
-    div.img div {
-      background-color: auto;
-
-to:
-
-    div.img div {
-      background-color: purple;
-
-You can also add the following html anywhere in your theme output:
-
-    <style>
-        div.img div { background-color: purple }
-    </style>
 
 == To Do List ==
 
@@ -222,14 +207,17 @@ You can also add the following html anywhere in your theme output:
 * bug: add_settings_field() &lt;label for="s"&gt; not &lt;label for="stdthumb"&gt;
     work-around is to only use unique single char id fields
     defined as constants
-* bug: zoomin.cur is often, but not always, 404'd
 
 == Changelog ==
 
 = 0.10.0 =
+  * 2012-11-25 Add Flickr support and remove Highslide library
+  * The Highslide JavaScript image viewer library had a license that was not
+    compatible so it was replaced with the PrettyPhoto library
   * Flickr image support with [flickr pid="123"] or <img flirckr="123">
   * Flickr set support with [flickrset id="123"]
-  - Note: [flickrset id="123"] will become [flickr set="123"] next release
+  - Note: [flickrset id="123"] usage is deprecated and will become [flickr
+    set="123"] next release
 
 = 0.9.7.5 =
   * 2011-11-03 BBCode [img] support
@@ -247,8 +235,8 @@ You can also add the following html anywhere in your theme output:
   * Changed: Auto determine orientation admin setting now defaults to off
 
 = 0.9.7 =
-  * 2011-03-21 Administration upgrage version
-  * Fixed: stylesheet displayed correctly allowing height attribute without width
+  * 2011-03-21 Administration upgrade version
+  * Fixed: style-sheet displayed correctly allowing height attribute without width
   * Fixed: trailing slash on image tag no longer required &lt;img/&gt;
   * Fixed: admin options for thumbnail dimensions UI bug
   * Fixed: image aspect ratio now correctly calculated
