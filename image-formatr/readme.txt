@@ -1,35 +1,31 @@
 === Image Formatr ===
 Contributors: huntermaster
 Tags: images, caption, formatting, post, page
-Requires at least: 2.7
-Tested up to: 3.4.2
+Requires at least: 2.9
+Tested up to: 3.5
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=sroth77@gmail.com&item_name=Image+Formatr+Wordpress+plugin
-Stable tag: 0.10.0
+Stable tag: 1.0
 
 Formats all content images on a page / post giving them borders and captions.
 
 == Description ==
 
-Image Formatr is a simple plugin that goes through all the content
-images on a post/page:
+Image Formatr is a simple plugin that goes through all the content images on
+posts, pages and widgets with zero user changes and:
 
   1. gives them a standardized thumbnail format using CSS
   2. puts a caption underneath each one using the title
   3. makes them linked so they popup in full size
 
-Thumbnails are not generated, the actual image is displayed in a smaller
-size by telling the browser the preferred display dimensions.
+Thumbnails are not generated, the actual image is displayed in a smaller size
+by telling the browser the preferred display dimensions.
 
 *Note: **Flickr** support added in version 0.10.0.*
 
-I would love your feedback!
-sroth77 is now at gmail.com
-http://warriorself.com/blog/contact/
-thanks.
-
 = Usage =
 
-*This only applies to the images you put in your content, not theme graphics.*
+*This only applies to the images you put in your content or your widgest, not
+theme graphics.*
 
     <img
       src="/images/picture.jpg"
@@ -42,21 +38,23 @@ thanks.
 After the plugin runs, the output to the browser looks like:
 
     <div class="img alignright">
-    <a
-      href="/images/picture.jpg"
-      rel="prettyPhoto[main]"
-    ><img
-      src="/images/picture.jpg"
-      title="Image borrowed from example.com" alt=""
-      width="140" height="90"
-      alt=""
-    ></a>
-    <div style="width: 100%;">
-      <a href="http://example.com/" target="_blank">A sample caption</a>
-    </div>
+      <a
+        href="/images/picture.jpg"
+        rel="prettyPhoto[main]">
+        <img
+          src="/images/picture.jpg"
+          title="Image borrowed from example.com" alt=""
+          width="140" height="90"/>
+      </a>
+      <div style="width: 100%;">
+        <a href="http://example.com/" target="_blank">A sample caption</a>
+      </div>
     </div>
 
-&nbsp;
+
+= Documentation =
+
+You can find plugin documentation at http://warriorself.com/blog/about/image-formatr/
 
 = Features =
 
@@ -119,8 +117,8 @@ output the content directly from the post, use the `asis` attribute.
     /></a>
 
 Note: concerning the *true/false* overrides, do not include "false" parameters
-like `<img usemya="false">`, for these boolean overrides only include the attribute
-if you want to designate a "true" value.
+like `<img usemya="false">`, i.e these overrides should only include the attributes
+for which you want to designate a "true" value.
 
 == Installation ==
 
@@ -168,20 +166,21 @@ client.
 
 * add screenshot of output image with caption
 
-== Current Wishlist for version 1.0 ==
+== Current Wishlist ==
 
 * phone-home feature, activate/deactivate stats helper with version number
 * add admin option to configure the plugin priority
 * add admin option for html/xhtml &lt;img/&gt; closing tags
-* add admin option for moving title attribute to alt attribute should it overwrite an existing alt?
-* add admin option for name to use for default prettyPhoto slideshow group
+* add admin option for moving title attribute to alt attribute should it
+overwrite an existing alt?
 * debug mode could show images not found and whatnots and profiling stats
 * change [flickrset id="1234"] to [flickr set="1234"]
 * change [flickr pid="123"] to [flickr img="123"]
 * add a do_shortcode() list for before/after IF content filtering
-    add_filter('the_content', 'do_shortcode', $custom_shortcode_priority, $arguments)
-    do_shortcode('[ngggallery]');
-    do_shortcode('[flickr]');
+    * add_filter('the_content', 'do_shortcode', $custom_shortcode_priority,
+      $arguments)
+    * do_shortcode('[ngggallery]');
+    * do_shortcode('[flickr]');
 * show "the_content" ordering vis a vie wp-hooks-filters-flow.php
     Priority 8 :
         WP_Embed-&gt;run_shortcode()
@@ -201,14 +200,25 @@ client.
 
 == Current Buglist ==
 
-* bug: if you click too early, before the image viewer loads, the anchor
-    is still "live" and will not use ajax, i.e the new url will load
-    which is the normal anchor behaviour
 * bug: add_settings_field() &lt;label for="s"&gt; not &lt;label for="stdthumb"&gt;
-    work-around is to only use unique single char id fields
-    defined as constants
+    work-around is to only use unique single char id fields defined as constants
 
 == Changelog ==
+
+= 1.0 =
+  * 2013-03-23
+  * redo Admin with a better UI using settings information popups
+  * add admin option for name to use for default prettyPhoto slideshow group
+  * add admin option to toggle processing of page/post content
+  * add admin option to toggle processing of WP Text Widget content
+  * fix Flickr loop bug if we could not open the image url
+
+= 0.10.1 =
+  * 2012-12-12 Remove asis attribute and add caption css class
+  * Remove the asis attribute if provided
+  * add php5 constructor, move old constructor to base
+  * add admin option to add css-class to caption div
+  * simplify width styling
 
 = 0.10.0 =
   * 2012-11-25 Add Flickr support and remove Highslide library
@@ -304,6 +314,9 @@ client.
   * 2010-01-5 Initial alpha release
 
 == Upgrade Notice ==
+
+= 1.0 =
+Admin UI restructuring using settings information popups
 
 = 0.10.0 =
 Flickr support added and removed Hishgslide library because of licensing

@@ -4,7 +4,7 @@ require_once(dirname(__FILE__) . '/class.base.php');
 if (!class_exists("ImageFormatrAdmin")) {
     class ImageFormatrAdmin extends ImageFormatrBase {
 
-        // default html admin options
+        // default html admin options for activation
         var $def_options = array(
                 'capatt'    => "title",
                 'newtitle'  => "Click here to enlarge.",
@@ -15,6 +15,8 @@ if (!class_exists("ImageFormatrAdmin")) {
                 'img2short' => "",
                 'img2page'  => "3",
                 'dofx'      => "on",
+                'docontent' => "on",
+                'dowidget'  => "on",
                 'force'     => "",
                 'stdthumb'  => "on",
                 'killanc'   => "on",
@@ -22,30 +24,170 @@ if (!class_exists("ImageFormatrAdmin")) {
                 'addclass'  => "img",
                 'remclass'  => "",
                 'xcludclass'=> "wp-smiley",
+                'capclass'  => "",
+                'group'     => "main",
                 'uninstal'  => "",
                 'prettyuse' => "on",
                 # legacy options used for deactivation removal
-                'highuse'   => null,
-                'homelong'  => null,
-                'homeshort' => null,
-                'yanktit'   => null,
+                'highuse'   => null,  # old Highslide library
+                'homelong'  => null,  # replaced by img2long
+                'homeshort' => null,  # replaced by img2short
+                'yanktit'   => null,  # typo for yankit
         );
 
         function admin_init ( )
         {
-            $this->option_descriptions = Array(
-                'yankit'    => __('Blank out the image title.', IMAGEFORMATR_TEXTDOMAIN). " <code>&lt;img title=&quot;&quot;/&gt;</code> NOTE: this will override the <em>Title replacement</em> option below.",
-                'dofx'      => __('Wrap the image in a popup zoom anchor.', IMAGEFORMATR_TEXTDOMAIN). " <code>&lt;a rel=&quot;prettyPhoto&quot;&gt;&lt;img/&gt;&lt;/a&gt;</code>",
-                'killanc'   => __('Ignore any image anchors in the post.', IMAGEFORMATR_TEXTDOMAIN). " This option will be overridden with an image's <code>usemya</code> attribute. <code>&lt;a href=&quot;dont-ignore-me.html&quot;&gt;&lt;img usemya=&quot;true&quot;/&gt;&lt;/a&gt;</code>",
-                'force'     => __('Force relative parent location of images to the root.', IMAGEFORMATR_TEXTDOMAIN). " Interpret <code>&lt;img src=&quot;../images/1.jpg&quot;/&gt;</code> as <code>&lt;img src=&quot;/images/1.jpg&quot;/&gt;</code> which helped when I changed my permalinks.",
-                'stdthumb'  => "Try to size all the thumbnails to the dimensions below even if you have width &amp; height set in your image tags.  So, enable this if you want to ignore any width &amp; height settings in your image tags.  This option will be overridden with an image's <code>usemysize</code> attribute.  <code>&lt;img usemysize=&quot;true&quot; width=&quot;200&quot; height=&quot;132&quot;/&gt;</code>",
-                'newtitle'  => "The new image title (used for the mouse-over hint in most browsers). <code>&lt;img title=&quot;Click here to enlarge.&quot;/&gt;</code> NOTE: this will be overridden by the <em>Strip title</em> option above.",
-                'inspect'   => "Try to determine the dimensions of the image to see if it is portrait (standing up) or layout (laying down) before deciding if the width/height is the long or short edges. NOTE: may cause pages with lots of images to load slowly.              <em>Uses PHP <a target='_blank' href='http://php.net/manual/en/function.getimagesize.php'>GetImageSize</a> function.</em>",
-                'addclass'  => "Enter a space-separated list of classes to add to the image container div.",
-                'remclass'  => "Enter a space-separated list of classes to remove from the image container div.",
-                'xcludclass'=> "Enter a space-separated list of classes to exclude images from processing, i.e. images with these classes will not be touched, just displayed &quot;as-is&quot;. Note: <tt>wp-smiley</tt> is the class used by Wordpress <em>emoticons</em>. Example: <code>wp-smiley exclude-me-class excludemetoo</code>",
-                'prettyuse' => "Use the prettyPhoto library included with the Image Formatr plugin?  Uncheck this option to disable the pre-bundled prettyPhoto JavaScript Image library from loading as well as the prettyPhoto Settings below.  If you uncheck this option and have the Popup Effects setting checked above then you need to include your own image viewer library in your theme or in an integration plugin.",
-                'uninstal'  => "Remove all Image Formatr settings from the database upon plugin deactivation?              Check this box if you want to automatically uninstall this plugin when you deactivate it.               This will clean up the database but you will loose all your settings and you will have the default settings if you re-activate it. If you're not sure, don't check it.",
+            $this-> option_descriptions = array(
+                'capatt'    => array(
+                    'title' => 'Caption attribute',
+                    'desc'  => 'The image attribute to be used as the caption.',
+                    'code'  => '<img title="Gone With the Wind" alt="book">',
+                               ),
+                'newtitle'  => array(
+                    'title' => 'Title replacement',
+                    'desc'  => 'The new image title (used for the mouse-over hint in most browsers).',
+                    'code'  => '<img title="'. $this->get_option('newtitle') .'">',
+                    'html'  => '<p>NOTE: this will be overridden by the <em>Strip title</em> option.</p>',
+                               ),
+                'group'     => array(
+                    'title' => 'Slideshow group',
+                    'desc'  => 'You can organize images into groups by giving them a <code>group</code> attribute.',
+                    'code'  => '<img group="'. $this->get_option('group') .'">',
+                    'html'  => '<p>NOTE: this setting is the default group for all images <b>without</b> the <em>group</em> attribute.</p>',
+                               ),
+                'yankit'    => array(
+                    'title' => 'Strip title',
+                    'desc'  => 'Blank out the image title.',
+                    'code'  => '<img title=""/>',
+                    'html'  => array('NOTE: this will override the <em>Title replacement</em> option.'),
+                               ),
+                'killanc'   => array(
+                    'title' => 'Ignore anchors',
+                    'desc'  => 'Ignore any image anchors in the content we process.',
+                    'code'  => '<a href="dont-ignore-me.html"><img usemya="true"></a>',
+                    'html'  => '<p>NOTE: This option will be overridden with an image`s <code>usemya</code> attribute.</p>',
+                               ),
+                'dofx'      => array(
+                    'title' => 'Popup effects',
+                    'desc'  => 'Wrap the image in a popup zoom anchor.',
+                    'code'  => '<a rel="prettyPhoto"><img/></a>',
+                               ),
+                'force'     => array(
+                    'title' => 'Force root',
+                    'desc'  => 'Force relative parent location of images to the root.',
+                    'html'  => "<p>Interpret <code>&lt;img src=&quot;../images/1.jpg&quot;/&gt;</code> as <code>&lt;img src=&quot;/images/1.jpg&quot;/&gt;</code> which helped when I changed my permalinks.</p>",
+                               ),
+                'docontent' => array(
+                    'title' => 'Process page/post content',
+                    'desc'  => 'Should we process the contents of all posts and pages?',
+                    'html'  => "<p>Allows you to turn on/off processing of the images found within the content of the blog`s posts and pages.</p>",
+                               ),
+                'dowidget'  => array(
+                    'title' => 'Process widget content',
+                    'desc'  => 'Should we process the contents of the Wordpress Text widget in the sidebar?',
+                    'link'  => 'http://codex.wordpress.org/WordPress_Widgets#Using_Text_Widgets',
+                    'html'  => "<p>Allows you to turn on/off processing of the images found within the text of the Wordpress Text Widget.</p>",
+                               ),
+
+                'stdthumb'  => array(
+                    'title' => 'Standardize thumbnails',
+                    'desc'  => 'Try to size all images to the thumbnail dimensions.',
+                    'code'  => '<img usemysize="true" width="200" height="132"/>',
+                    'html'  => array('Try to size all the thumbnails to the dimensions below even if you have width &amp; height set in your image tags.',
+                                     'So, enable this if you want to ignore any width &amp; height settings in your image tags.  This option will be overridden with an image`s <code>usemysize</code> attribute.'),
+                               ),
+                'inspect'   => array(
+                    'title' => 'Auto determine orientation',
+                    'desc'  => 'Try to determine the dimensions of the image to see if it is portrait (standing up) or layout (laying down) before deciding if the width/height is the long or short edges.',
+                    'link'  => 'http://php.net/manual/en/function.getimagesize.php',
+                    'html'  => array('<em>Uses PHP <a href="http://php.net/manual/en/function.getimagesize.php" target="_blank">GetImageSize</a> function.</em>',
+                                     'NOTE: may cause pages with lots of images to load slowly.'),
+                               ),
+                'addclass'  => array(
+                    'title' => 'Additional classes',
+                    'desc'  => 'Enter a space-separated list of classes to add to the image container div.',
+                               ),
+                'remclass'  => array(
+                    'title' => 'Remove classes',
+                    'desc'  => 'Enter a space-separated list of classes to remove from the image container div.',
+                               ),
+                'xcludclass'=> array(
+                    'title' => 'Exclude classes',
+                    'desc'  => 'Enter a space-separated list of classes to exclude images from processing, i.e. images with these classes will not be touched, just displayed "as-is".',
+                    'code'  => 'wp-smiley exclude-me-class excludemetoo',
+                    'html'  => '<p>Note: <tt>wp-smiley</tt> is the class used by Wordpress <em>emoticons</em>.</p>',
+                               ),
+                'capclass'  => array(
+                    'title' => 'Caption classes',
+                    'desc'  => 'Enter a space-separated list of classes to add to the image caption div.',
+                    'code'  => '<div class="'. $this->get_option('capclass') .'"> Caption. </div>',
+                               ),
+
+                'flenable'  => array(
+                    'title' => 'Enable Flickr',
+                    'desc'  => 'Process images with the <code>flickr</code> attribute?',
+                    'code'  => '<img flickr="123456789">',
+                               ),
+                'flusername'=> array(
+                    'title' => 'Username',
+                    'desc'  => 'Your screen name',
+                    'link'  => 'http://www.flickr.com/account',
+                               ),
+                'flnsid'    => array(
+                    'title' => 'Flickr Id',
+                    'desc'  => 'Also known as: Name Server ID (NSID)',
+                    'code'  => '12345678@N00',
+                               ),
+                'flfrob'    => array(
+                    'title' => 'Frob',
+                    'desc'  => '',
+                    'code'  => '12345678901234567-1a23456bcdefghij-123456',
+                               ),
+                'fltoken'   => array(
+                    'title' => 'Token',
+                    'desc'  => '',
+                    'code'  => '12345678901234567-12345678ab123cd4',
+                               ),
+                'flapikey'  => array(
+                    'title' => 'API key',
+                    'desc'  => '',
+                    'code'  => '0a1234567890123bcd45678e90123456',
+                               ),
+                'flsecret'  => array(
+                    'title' => 'Secret',
+                    'desc'  => '',
+                    'code'  => 'a1b23c4de5f6gh78',
+                               ),
+
+                'prettyuse' => array(
+                    'title' => 'PrettyPhoto enabled',
+                    'desc'  => 'Use the prettyPhoto library included with the Image Formatr plugin?',
+                    'html'  => array('Uncheck this option to disable the pre-bundled prettyPhoto JavaScript Image library from loading.',
+                                     'If you uncheck this option and have the Popup Effects setting checked above then you need to include your own image viewer library in your theme or in an integration plugin.'),
+                              ),
+                'uninstal'  => array(
+                    'title' => 'Uninstall',
+                    'desc'  => 'Remove all Image Formatr settings from the database upon plugin deactivation?',
+                    'html'  => array('Check this box if you want to automatically uninstall this plugin when you deactivate it. This will clean up the database but you will loose all your settings and you will have the default settings if you re-activate it.',
+                                     'If you`re not sure, don`t check it. If you do want to uninstall this plugin, don`t forget to click <em>Save Changes</em>.',
+                                     '<em>Remember: the database is cleaned up when you "Deactivate"</em>.'),
+                               ),
+
+                'imgdefs'   => array(
+                    'name'  => 'imglong, imgshort',
+                    'title' => 'Default dimensions',
+                    'desc'  => 'These values will be used as the width & height.',
+                    'html'  => array('These values will be used as the width &amp; height in pixels by the <em>Auto determine orientation</em> setting which, if disabled will default to the <code>width</code> in the first box and the <code>height</code> in second box.',
+                                     'NOTE: leave one of the boxes blank (or zero) and it will be calculated using the aspect ratio to the other box.'),
+                               ),
+                'imgaddl'   => array(
+                    'name'  => 'img2long, img2short, img2page',
+                    'title' => 'Additional dimensions',
+                    'desc'  => 'These values will be used as the width & height.',
+                    'html'  => array('These dimenstions are used if you want to specify different settings for the front page or the single display page or everything else.',
+                                     'These values will be used as the width &amp; height in pixels by the <em>Auto determine orientation</em> setting which, if disabled will default to the <code>width</code> in the first box and the <code>height</code> in second box.',
+                                     'NOTE: leave one of the boxes blank (or zero) and it will be calculated using the aspect ratio to the other box.'),
+                               ),
             );
 
             register_setting(
@@ -53,122 +195,142 @@ if (!class_exists("ImageFormatrAdmin")) {
                 $this->settings_name,            // option name in settings table
                 array($this, 'admin_validate')); // sanitize callback function
 
-            add_settings_section(
-                'main_section',
-                'Main settings',
-                array($this, 'admin_overview'),
-                __FILE__);
+            add_settings_section('main_section', 'Main settings', array($this, 'admin_overview'), __FILE__);
+            $this-> add_settings(array('capatt'  ), 'print_dropdown', 'main_section');
+            $this-> add_settings(array('newtitle'), 'print_textbox' , 'main_section');
+            $this-> add_settings(array('group'   ), 'print_textbox' , 'main_section');
+            $this-> add_settings(array('yankit', 'killanc', 'dofx', 'docontent', 'dowidget', 'force'), 'print_checkbox', 'main_section');
 
-            add_settings_field('capatt'    , 'Caption attribute', array($this, 'admin_form_dropdown'), __FILE__, 'main_section', 'capatt'    );
-            add_settings_field('yankit'    , 'Strip title'      , array($this, 'admin_form_checkbox'), __FILE__, 'main_section', 'yankit'    );
-            add_settings_field('newtitle'  , 'Title replacement', array($this, 'admin_form_textbox' ), __FILE__, 'main_section', 'newtitle'  );
-            add_settings_field('dofx'      , 'Popup effects'    , array($this, 'admin_form_checkbox'), __FILE__, 'main_section', 'dofx'      );
-            add_settings_field('killanc'   , 'Ignore anchors'   , array($this, 'admin_form_checkbox'), __FILE__, 'main_section', 'killanc'   );
-            add_settings_field('force'     , 'Force root'       , array($this, 'admin_form_checkbox'), __FILE__, 'main_section', 'force'     );
-            add_settings_field('stdthumb'  , 'Standardize thumbnails', array($this, 'admin_form_checkbox'), __FILE__, 'main_section', 'stdthumb');
-            add_settings_field('imgdefs'   , 'Thumbnail dimensions (default)', array($this, 'admin_form_def_dims'), __FILE__, 'main_section');
-            add_settings_field('imgaddl'   , 'Thumbnail dimensions (additional)', array($this, 'admin_form_def_addl'), __FILE__, 'main_section');
-            add_settings_field('inspect'   , 'Auto determine orientation', array($this, 'admin_form_checkbox'), __FILE__, 'main_section', 'inspect');
+            add_settings_section('thumb_section', 'Thumbnail settings', array($this, 'admin_overview'), __FILE__);
+            $this-> add_settings(array('stdthumb'), 'print_checkbox', 'thumb_section');
+            $this-> add_settings(array('inspect' ), 'print_checkbox', 'thumb_section');
+            $this-> add_settings(array('imgdefs' ), 'print_img_defs', 'thumb_section');
+            $this-> add_settings(array('imgaddl' ), 'print_img_addl', 'thumb_section');
 
-            add_settings_section(
-                'adv_section',
-                'Advanced settings',
-                array($this, 'admin_overview'),
-                __FILE__);
+            add_settings_section('style_section', 'Styling settings', array($this, 'admin_overview'), __FILE__);
+            $this-> add_settings(array('addclass', 'remclass', 'xcludclass', 'capclass'), 'print_textbox', 'style_section');
 
-            add_settings_field('addclass'  , 'Additional classes', array($this, 'admin_form_textbox' ), __FILE__, 'adv_section', 'addclass'  );
-            add_settings_field('remclass'  , 'Remove classes'    , array($this, 'admin_form_textbox' ), __FILE__, 'adv_section', 'remclass'  );
-            add_settings_field('xcludclass', 'Exclude classes'   , array($this, 'admin_form_textbox' ), __FILE__, 'adv_section', 'xcludclass');
-            add_settings_field('prettyuse' , 'PrettyPhoto enabled',array($this, 'admin_form_checkbox'), __FILE__, 'adv_section', 'prettyuse' );
-            add_settings_field('uninstal'  , 'Uninstall'         , array($this, 'admin_form_checkbox'), __FILE__, 'adv_section', 'uninstal'  );
+            add_settings_section('flickr_section', 'Flickr settings', array($this, 'admin_overview'), __FILE__);
+            $this-> add_settings(array('flenable'), 'print_checkbox', 'flickr_section');
+            $this-> add_settings(array('flusername', 'flnsid', 'flfrob', 'fltoken', 'flapikey', 'flsecret'), 'print_textbox', 'flickr_section');
 
-            add_settings_section(
-                'flickr_section',
-                'Flickr settings',
-                array($this, 'admin_overview'),
-                __FILE__);
-
-            add_settings_field('flenable'  , 'Enable Flickr', array($this, 'admin_form_checkbox'), __FILE__, 'flickr_section', 'flenable'  );
-            add_settings_field('flusername', 'Username'     , array($this, 'admin_form_textbox' ), __FILE__, 'flickr_section', 'flusername');
-            add_settings_field('flnsid'    , 'NSID'         , array($this, 'admin_form_textbox' ), __FILE__, 'flickr_section', 'flnsid'    );
-            add_settings_field('flfrob'    , 'Frob'         , array($this, 'admin_form_textbox' ), __FILE__, 'flickr_section', 'flfrob'    );
-            add_settings_field('fltoken'   , 'Token'        , array($this, 'admin_form_textbox' ), __FILE__, 'flickr_section', 'fltoken'   );
-            add_settings_field('flapikey'  , 'API key'      , array($this, 'admin_form_textbox' ), __FILE__, 'flickr_section', 'flapikey'  );
-            add_settings_field('flsecret'  , 'Secret'       , array($this, 'admin_form_textbox' ), __FILE__, 'flickr_section', 'flsecret'  );
+            add_settings_section('adv_section', 'Advanced settings', array($this, 'admin_overview'), __FILE__);
+            $this-> add_settings(array('prettyuse', 'uninstal'), 'print_checkbox', 'adv_section');
         }
 
-        function admin_form_dropdown ( $f )
+        function add_settings ( $fields, $callback, $section )
         {
-            $desc = __('The image attribute to be used as the caption.', IMAGEFORMATR_TEXTDOMAIN);
-            $options = '';
-            foreach( array("title", "alt", "(x) no caption") as $item ) {
-                $selected = ($this->options[$f]==$item) ? 'selected="selected"' : '';
-                $options .= "<option value='$item' $selected>$item</option>\n";
-            }
-            echo <<< INPUT
-                <select id="$f" name="$this->settings_name[$f]">
-                    $options
+            foreach ($fields as $f)
+                add_settings_field( $f, $this-> option_descriptions[$f]['title'], array($this, $callback), __FILE__, $section, $f );
+        }
+
+        function print_dropdown ( $f )
+        {
+            $sel_tit = ($this->get_option($f) == 'title') ? 'selected="selected"' : '';
+            $sel_tit = ($this->get_option($f) == 'alt'  ) ? 'selected="selected"' : '';
+            $sel_tit = ($this->get_option($f) == 'x'    ) ? 'selected="selected"' : '';
+            $e = <<< ELEMENT
+                <select
+                    id="$f"
+                    name="$this->settings_name[$f]"
+                  ><option value="title" $sel_tit>title</option>
+                   <option value="alt"   $sel_alt>alt</option>
+                   <option value="x"     $sel_no>(x) no caption</option>
                 </select>
-                $desc
-                <code>&lt;img title="This is the title attribute parameter" alt="This is the alt attribute parameter"/&gt;</code>
-INPUT;
+ELEMENT;
+            $this-> print_element($e, $f);
         }
 
-        function admin_form_checkbox ( $f )
+        function print_checkbox ( $f )
         {
-            $desc = array_key_exists($f, $this->option_descriptions) ? $this->option_descriptions[$f] : '';
-            $checked = $this->options[$f] ? 'checked="checked" ' : '';
-            echo <<< INPUT
-                <input type="checkbox" id="$f" name="$this->settings_name[$f]" $checked/>
-                $desc
-INPUT;
+            $checked = $this->get_option($f) ? 'checked="checked" ' : '';
+            $e = <<< ELEMENT
+                <input
+                    id="$f"
+                    type="checkbox"
+                    name="$this->settings_name[$f]"
+                    $checked
+                    />
+ELEMENT;
+            $this-> print_element($e, $f);
         }
 
-        function admin_form_textarea ( $f )
+        function print_textbox ( $f )
         {
-            $desc = array_key_exists($f, $this->option_descriptions) ? $this->option_descriptions[$f] : '';
-            echo <<< INPUT
-                <textarea id="$f" name="$this->settings_name[$f]" rows="5" cols="50">{$this->options[$f]}</textarea>
-                $desc
-INPUT;
+            $e = <<< ELEMENT
+                <input
+                    id="$f"
+                    type="text"
+                    name="$this->settings_name[$f]"
+                    value="{$this->get_option($f)}"
+                    style="width: 300px"
+                    />
+ELEMENT;
+            $this-> print_element($e, $f);
         }
 
-        function admin_form_textbox ( $f )
+        function print_img_defs ( $f )
         {
-            $desc = array_key_exists($f, $this->option_descriptions) ? $this->option_descriptions[$f] : '';
-            echo <<< INPUT
-                <input type="text" id="$f" name="$this->settings_name[$f]" value="{$this->options[$f]}" />
-                $desc
-INPUT;
+            $e = <<< ELEMENTS
+                <input type="text" name="$this->settings_name[imglong]"  id="imglong"  value="{$this->get_option('imglong')}" size="5" />
+                x
+                <input type="text" name="$this->settings_name[imgshort]" id="imgshort" value="{$this->get_option('imgshort')}" size="5" />
+ELEMENTS;
+            $this-> print_element($e, $f);
         }
 
-        function admin_form_def_dims ( )
+        function print_img_addl ( $f )
         {
-            echo <<< INPUT
-              <input type="text" name="$this->settings_name[imglong]"  id="imglong"  value="{$this->options['imglong']}" size="5" />
+            $checked = array('', '', '', '');
+            $checked[$this->get_option('img2page')] = "checked";
+            $e = <<< ELEMENTS
+              <input type="text" name="$this->settings_name[img2long]"  id="img2long"  value="{$this->get_option('img2long')}" size="5" />
               x
-              <input type="text" name="$this->settings_name[imgshort]" id="imgshort" value="{$this->options['imgshort']}" size="5" />
-              These values will be used as the width &amp; height in pixels by the <em>Auto determine orientation</em> setting
-              which, if disabled will default to the <code>width</code> in the first box and the <code>height</code> in second box.
-              NOTE: leave one of the boxes blank (or zero) and it will be calculated using the aspect ratio to the other box.
-INPUT;
-        }
-
-        function admin_form_def_addl ( )
-        {
-            $checked = Array('', '', '', '');
-            $checked[$this->options['img2page']] = "checked";
-            echo <<< INPUT
-              <input type="text" name="$this->settings_name[img2long]"  id="img2long"  value="{$this->options['img2long']}" size="5" />
-              x
-              <input type="text" name="$this->settings_name[img2short]" id="img2short" value="{$this->options['img2short']}" size="5" />
+              <input type="text" name="$this->settings_name[img2short]" id="img2short" value="{$this->get_option('img2short')}" size="5" />
               =
               <input type="radio" name="$this->settings_name[img2page]" id="img2page0" value="0" {$checked[0]} /> <label for="img2page0">front</label> |
               <input type="radio" name="$this->settings_name[img2page]" id="img2page1" value="1" {$checked[1]} /> <label for="img2page1">not front</label> |
               <input type="radio" name="$this->settings_name[img2page]" id="img2page2" value="2" {$checked[2]} /> <label for="img2page2">single</label> |
               <input type="radio" name="$this->settings_name[img2page]" id="img2page3" value="3" {$checked[3]} /> <label for="img2page3">not single</label> /
-              Thumbnail dimensions if you want to specify different settings for the front page or the single display page or everything else.
-              See <em>Thumbnail dimensions (default)</em> setting for description.
+ELEMENTS;
+            $this-> print_element($e, $f);
+        }
+
+        function print_element ( $e, $f )
+        {
+            $name = $f;
+            $code = $html = $link = $title = '';
+            $desc = array_key_exists($f, $this->option_descriptions) ? $this->option_descriptions[$f] : '';
+            if (is_array($desc)) extract($desc);
+            $desc = __($desc, IMAGEFORMATR_TEXTDOMAIN);
+            $_titl = esc_attr($title);
+            $_desc = esc_attr(wp_strip_all_tags($desc));
+            $_code = esc_html($code);
+            $desc = preg_replace( "/&(?![A-Za-z]{0,4}\w{2,3};|#[0-9]{2,3};)/", "&amp;", strtr($desc, array(chr(38) => '&')) );  # convert & to &amp; (unless already converted)
+            $code = $code ? "<p><code>$_code</code></p>" : '';
+            $link = $link ? "<p>See: <a href='$link' target='_blank'>$link</a></p>" : '';
+            $html = is_array($html) ? '<p>'. implode('</p><p>', $html) .'</p>' : $html;
+
+            echo <<< INPUT
+                <span title="$_desc">
+                    $e
+                </span>
+                <input
+                    value="?"
+                    class="thickbox"
+                    alt="#TB_inline?height=300&amp;width=400&amp;inlineId=TB-$f"
+                    title="$_titl"
+                    type="button"
+                    />
+                <div id="TB-$f" style="display: none">
+                    <div>
+                        <p>$desc</p>
+                           $code
+                           $html
+                           $link
+                        <p><em>Option name(s): <tt>$name</tt></em></p>
+                    </div>
+                </div>
 INPUT;
         }
 
@@ -194,18 +356,18 @@ INPUT;
         function admin_validate ( $input )
         {
             // only validate the integers
-            $integers = Array('imglong', 'imgshort', 'img2long', 'img2short');
-            foreach( $input as $key => $val) {
+            $integers = array('imglong', 'imgshort', 'img2long', 'img2short');
+            foreach ($input as $key => $val) {
                 $this->options[$key] = $val;
-                if( in_array($key, $integers) )
+                if (in_array($key, $integers))
                     $this->admin_validate_positive_integer($input, $key);
             }
 
             // the checkbox fields will not be present in the $input
             // so they need to be manually set to false if absent
-            $checkboxes = Array('yankit', 'dofx', 'killanc', 'force', 'stdthumb', 'uninstal', 'inspect', 'prettyuse', 'flenable');
-            foreach( $checkboxes as $checkbox )
-                if( !array_key_exists($checkbox, $input) )
+            $checkboxes = array('yankit', 'dofx', 'docontent', 'dowidget', 'killanc', 'force', 'stdthumb', 'uninstal', 'inspect', 'prettyuse', 'flenable');
+            foreach ($checkboxes as $checkbox)
+                if (!array_key_exists($checkbox, $input))
                     $this->options[$checkbox] = '';
 
             return $this->options;
@@ -242,7 +404,7 @@ INPUT;
             foreach ($this->def_options as $option => $default_value) {
                 $old_key1 = "if_$option"; // legacy option index
                 $old_key2 = "image-formatr_$option"; // legacy option index
-                if( !array_key_exists($option, $this->options) and !is_null($default_value) ) {
+                if (!array_key_exists($option, $this->options) and !is_null($default_value)) {
                     $old_value = get_option($old_key2) ? get_option($old_key2) : get_option($old_key1); // check for legacy values
                     $this->options[$option] = $old_value ? $old_value : $default_value;
                 }
@@ -253,7 +415,7 @@ INPUT;
             // a bit of a hack
             // if the Additional classes setting is blank (upgrade from
             // 0.9.7.4 to 0.9.7.5), then let's just pop in the default
-            if( !$this->options['addclass'] )
+            if (!$this->get_option('addclass'))
                 $this->options['addclass'] = $this->def_options['addclass'];
 
             update_option($this->settings_name, $this->options);
@@ -263,9 +425,10 @@ INPUT;
         function deactivate()
         {
             // uninstall all options from the database
-            if( $this->options['uninstal'] ) {
+            if ($this->get_option('uninstal')) {
                 delete_option($this->settings_name);
                 // delete any leftover legacy option straggelers
+                // from older versions of the plugin
                 foreach ($this->def_options as $option => $value)
                     delete_option(IMAGEFORMATR_TEXTDOMAIN."_$option");
             }

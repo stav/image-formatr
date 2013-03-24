@@ -31,15 +31,6 @@ if (!class_exists("ImageFormatr")) {
         // administration settings are stored in a single table
         var $options = array();
 
-  ////////////////////////////////////////////////////////// PHP4-compatable constructor
-
-        function ImageFormatr()
-        {
-            $this->settings_name = 'plugin_' . IMAGEFORMATR_TEXTDOMAIN;  // Wordpress settings table entry name
-            $this->options = get_option($this->settings_name);
-            $this->init();
-        }
-
         // load plugin settings
         function init()
         {
@@ -47,6 +38,8 @@ if (!class_exists("ImageFormatr")) {
             $this->caption_att     =            $this->get_option('capatt') ? $this->get_option('capatt') : 'title'; // attribute to be used for image caption
             $this->strip_title     =            $this->get_option('yankit') ? true : false; // should "title" attribute be stripped?
             $this->add_class       =            $this->get_option('addclass' ); // list of css classes to add to the container div
+            $this->cap_class       =            $this->get_option('capclass' ); // list of css classes to add to the caption div
+            $this->def_group       =            $this->get_option('group'    ); // the default PrettyPhoto grouping designator
             $this->new_title       =         __($this->get_option('newtitle' )); // the new title replacement
             $this->def_img_width   = abs(intval($this->get_option('imglong'  )));
             $this->def_img_height  = abs(intval($this->get_option('imgshort' )));
@@ -65,13 +58,19 @@ if (!class_exists("ImageFormatr")) {
             $this->flickr->apikey   =          $this->get_option('flapikey'  );
             $this->flickr->secret   =          $this->get_option('flsecret'  );
 
+            // add filters here dynamically, only if needed
+            if ($this->get_option('docontent'))
+                add_filter('the_content', array($this, 'filter'), 10);
+            if ($this->get_option('dowidget'))
+                add_filter('widget_text', array($this, 'filter'), 10);
+
             // remove class list
-            foreach( explode(' ', $this->get_option('remclass')) as $class )
+            foreach (explode(' ', $this->get_option('remclass')) as $class)
                 if (trim($class))
                     $this->remove_classes[] = trim($class);
 
             // exclude class list
-            foreach( explode(' ', $this->get_option('xcludclass')) as $class )
+            foreach (explode(' ', $this->get_option('xcludclass')) as $class)
                 if (trim($class))
                     $this->exclude_classes[] = trim($class);
 
@@ -104,9 +103,16 @@ if (!class_exists("ImageFormatr")) {
             }
         }
 
+  //////////////////////////////////////////////// debug
+
+        function widget_text ( $_widget_text )
+        {
+            return $_widget_text;
+        }
+
   //////////////////////////////////////////////// parse content methods
 
-        function filter ( $content )
+        function filter ( $markup )
         {
             // if we are displaying a page that meets the additional-page
             // criteria (e.g. single), then we use the additional dimensions
@@ -123,18 +129,18 @@ if (!class_exists("ImageFormatr")) {
 
             ////////////////////////////////        [flickr                ]
             if ($this->flickr->enable) {
-                $content = preg_replace_callback('/\[flickrset\s+id="(\d+)"\]/', array($this, 'do_shortcode_flickrset'), $content);
-                $content = preg_replace_callback('/\[flickr\s+pid="(\d+)"\]/'  , array($this, 'do_shortcode_flickr'   ), $content);
-               #$content = preg_replace_callback("/\[flickr[^\]]+\]/"          , array($this, 'do_shortcode_flickr'   ), $content);
+                $markup = preg_replace_callback('/\[flickrset\s+id="(\d+)"\]/', array($this, 'do_shortcode_flickrset'), $markup);
+                $markup = preg_replace_callback('/\[flickr\s+pid="(\d+)"\]/'  , array($this, 'do_shortcode_flickr'   ), $markup);
+               #$markup = preg_replace_callback("/\[flickr[^\]]+\]/"          , array($this, 'do_shortcode_flickr'   ), $markup);
             }
 
             // [img] BBcode short tags /////    [img      ]         [/img ]
-            $content = preg_replace_callback('|\[img( *[^]]*)\](.*)\[/img\]|', array($this, 'do_shortcode_bbcode_img'), $content);
+            $markup = preg_replace_callback('|\[img( *[^]]*)\](.*)\[/img\]|', array($this, 'do_shortcode_bbcode_img'), $markup);
 
             // regular img tags ////////////      <p>   <a     >      <img      / >     <    /a>     < /p>   insensitive-case
-            $content = preg_replace_callback("/(?:<p>)?(<a[^>]*>)?\s*(<img[^>]*\/?>)\s?(<\s*\/a>)?(?:<\/p>)?/i", array($this, 'parse'), $content);
+            $markup = preg_replace_callback("/(?:<p>)?(<a[^>]*>)?\s*(<img[^>]*\/?>)\s?(<\s*\/a>)?(?:<\/p>)?/i", array($this, 'parse'), $markup);
 
-            return $content;
+            return $markup;
         }
 
         /**
@@ -142,39 +148,37 @@ if (!class_exists("ImageFormatr")) {
          * once.  Unfortunately I could not find an API call to search for
          * a list of Ids, therefore we're searching for all damn photos for
          * our user and then indexing those for the ones we want.
-         *
-         * Note: requires the Flickr Manager plugin to handle the shortcode
          */
         function load_flickr_data ( )
         {
-            if(  $this->flickr->loaded ) return true;
-            if( !$this->flickr->enable ) return false;
-            $this->flickr->loaded = true;
+            if ( $this-> flickr-> loaded) return true;
+            if (!$this-> flickr-> enable) return false;
+            $this-> flickr-> loaded = true;
             $this-> flickr_photos = array();
             $page = 0;
 
             $params = array(
-                'user_id'        => $this->flickr->nsid,
-                'auth_token'     => $this->flickr->token,
+                'user_id'        => $this-> flickr-> nsid,
+                'auth_token'     => $this-> flickr-> token,
                 'extras'         => 'last_update,tags,url_m,url_l',
-                'privacy_filter' =>  1, // public photos
-                'content_type'   =>  1, // photos only
+                'privacy_filter' =>  1, // 1 == public photos
+                'content_type'   =>  1, // 1 == photos only
                 'per_page'       =>  500, // we can only return 500 at a time max
                 );
             $flickr_photos = array();
             $finished = false;
-            while( !$finished ) {
+            while (!$finished) {
                 $params['page'] = ++$page;
                 $response = $this-> call_flickr_api('flickr.photos.search', $params, true );
-                if( $response['stat'] == 'ok' and
-                    $response['photos']['photo'] ) {
-                        $flickr_photos = array_merge( $flickr_photos, $response['photos']['photo'] );
+                if ($response['stat'] == 'ok' and
+                    $response['photos']['photo']) {
+                        $flickr_photos = array_merge ($flickr_photos, $response['photos']['photo']);
                 }
-                if( count($response['photos']['photo']) < 500 )
+                if (count($response['photos']['photo']) < 500)
                     $finished = true;
             }
 
-            foreach( $flickr_photos as $photo ) {
+            foreach ($flickr_photos as $photo) {
                 $this-> flickr_photos[$photo['id']] = $photo;
             }
 
@@ -195,8 +199,6 @@ if (!class_exists("ImageFormatr")) {
 
         /**
          * Process the [flickr] shortcodes
-         *
-         * Note: requires the Flickr Manager plugin to handle the shortcode
          *
          * [0] => [flickr pid="5496015411"]
          * [1] => 5496015411
@@ -231,7 +233,7 @@ IMAGE;
                 'photoset_id'    => $matches[1],
                 'auth_token'     => $this->flickr->token,
                 'extras'         => 'last_update,tags,url_sq,url_l',
-                'privacy_filter' =>  1, // public photos
+                'privacy_filter' =>  1, // 1 == public photos
                 );
             $photoset = $this-> call_flickr_api( 'flickr.photosets.getPhotos', $params, true );
 
@@ -264,7 +266,7 @@ IMAGE;
             $image_atts  = array();
             $orig_markup = $matches[0];
 
-            if( count($matches) < 3 )
+            if (count($matches) < 3)
                 return $orig_markup;
 
             $anchor_tag  = $matches[1];
@@ -303,11 +305,12 @@ IMAGE;
             // [asis] =>
             // [usemysize] =>
             // [page] =>
-            $image_atts = array_merge(array('group'=>$this->group)          , $image_atts);
+            $image_atts = array_merge(array('group' => $this->def_group), $image_atts);
             $image_atts = array_merge(array_fill_keys($this->image_atts, ''), $image_atts);
 
-            // return the untouched markup if the asis attribute is set
-            if ($image_atts['asis']) return $orig_markup;
+            // return the original markup (sans asis) if the asis attribute is set
+            if ($image_atts['asis'])
+                return $this->get_rid_of_attr($orig_markup, 'asis');
 
             // return the untouched markup if the image style contains
             // an excluded class
@@ -333,16 +336,16 @@ IMAGE;
 
             // personal fix for my website, force all parent-relative urls
             // to be root-relative instead, i.e. change ../ to /
-            if( substr($image_atts['src'], 0, 3) == "../" and $this->options['force'] )
+            if ( substr($image_atts['src'], 0, 3) == "../" and $this->get_option('force') )
                 $image_atts['src'] = substr($image_atts['src'], 2);
 
             // Flickr hack
-            if( $image_atts['flickr'] ) {
-                if( $this->load_flickr_data() and array_key_exists( $image_atts['flickr'], $this->flickr_photos ) ) {
-                                                $image_atts['src'  ] = $this->flickr_photos[$image_atts['flickr']]['url_l'];
-                   #if( !$image_atts['thumb'] ) $image_atts['thumb'] = $this->flickr_photos[$image_atts['flickr']]['url_m'];
-                   #if( !$image_atts['title'] ) $image_atts['title'] = $this->flickr_photos[$image_atts['flickr']]['tags'];
-                    if( !$image_atts['alt'  ] ) $image_atts['alt'  ] = $this->flickr_photos[$image_atts['flickr']]['tags'];
+            if ($image_atts['flickr']) {
+                if ( $this->load_flickr_data() and array_key_exists($image_atts['flickr'], $this->flickr_photos) ) {
+                                               $image_atts['src'  ] = $this->flickr_photos[$image_atts['flickr']]['url_l'];
+                   #if (!$image_atts['thumb']) $image_atts['thumb'] = $this->flickr_photos[$image_atts['flickr']]['url_m'];
+                   #if (!$image_atts['title']) $image_atts['title'] = $this->flickr_photos[$image_atts['flickr']]['tags'];
+                    if (!$image_atts['alt'  ]) $image_atts['alt'  ] = $this->flickr_photos[$image_atts['flickr']]['tags'];
                 }
             }
 
@@ -374,7 +377,7 @@ IMAGE;
             }
 
             // collect the actual image dimensions
-            if ($this->options['inspect']) {
+            if ($this->get_option('inspect')) {
                 // first load the image dimensions
                 #list($img_width, $img_height, $img_type, $img_attr) = getimagesize($param['src']);
                 // [0] => 1000
@@ -425,19 +428,16 @@ IMAGE;
 
             // setup caption print variable ////////////////////////////
             $caption = $param[$this->caption_att];
-            $div_style = "";
             if ($param['nocap'])
               $caption = "";
             if ($caption and $param['link'])
               $caption = "<a href=\"{$param['link']}\" target=\"_blank\">$caption</a>";
-            if ($caption) {
-              $caption = "<div style=\"width:100%;\">$caption</div>";
-              $div_style = "style=\"width:{$img_width}px\"";
-            }
+            if ($caption)
+              $caption = "<div class=\"$this->cap_class\" style=\"width:100%\">$caption</div>";
 
             // setup effect print variable /////////////////////////////
             $effect = "";
-            if ($this->options['dofx'])
+            if ($this->get_option('dofx'))
               $effect = <<< EFFECT
                 rel="prettyPhoto[{$param['group']}]"
 EFFECT;
@@ -447,8 +447,7 @@ EFFECT;
             // setup anchor print variable /////////////////////////////
             $anchor = $anchor_close = "";
             if (!empty($param['anchor']))
-              if( ($param['usemya']==true)
-               or (!$this->options['killanc']) )
+              if ( ($param['usemya']==true) or (!$this->get_option('killanc')) )
                 $anchor = $param['anchor'];
             if (!$anchor)
               if (!$param['nofx'])
@@ -465,7 +464,7 @@ ANCHOR;
             // setup printing output ///////////////////////////////////
             ob_start();
             print <<< IMG
-              <div $id class="{$this->add_class} {$param['class']}" $div_style>
+              <div $id class="{$this->add_class} {$param['class']}" style="width:{$img_width}px">
                 $anchor<img src="$src" alt="{$param['alt']}" $img_style $title/>$anchor_close
                 $caption
               </div>

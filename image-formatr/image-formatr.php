@@ -3,7 +3,7 @@
   * Plugin Name: Image Formatr
   * Plugin URI: http://warriorself.com/blog/about/image-formatr/
   * Description: Formats all content images on a page / post giving them borders and captions.
-  * Version: 0.10.0
+  * Version: 1.0
   * Author: Steven Almeroth
   * Author URI: http://warriorship.org/sma/
   * License: GPL2
@@ -26,7 +26,7 @@
   *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   */
 define ('IMAGEFORMATR_TEXTDOMAIN', 'image-formatr');
-define( 'IMAGEFORMATR_VERSION'   , '0.10.0');
+define( 'IMAGEFORMATR_VERSION'   , '1.0');
 
 include_once(dirname(__FILE__) . '/class.formatr.php');
 
@@ -38,11 +38,13 @@ if (class_exists("ImageFormatr")) {
     register_deactivation_hook(__FILE__, array($image_formatr_instance, 'deactivate'));
 
     // actions
-    add_action('admin_init'       , array($image_formatr_instance, 'admin_init'   ));
-    add_action('admin_menu'       , array($image_formatr_instance, 'admin_menu'   ));
-    add_action('template_redirect', array($image_formatr_instance, 'enqueue'      ));
-    add_action('wp_footer'        , array($image_formatr_instance, 'print_scripts'));
+    add_action('admin_init'           , array($image_formatr_instance, 'admin_init'   ));
+    add_action('admin_menu'           , array($image_formatr_instance, 'admin_menu'   ));
+    add_action('admin_enqueue_scripts', array($image_formatr_instance, 'enqueue'      ));
+    add_action('template_redirect'    , array($image_formatr_instance, 'enqueue'      ));
+    add_action('wp_footer'            , array($image_formatr_instance, 'print_scripts'));
 
     // filters
-    add_filter('the_content', array($image_formatr_instance, 'filter'), 10);
+    // add_filter('the_content'     , array($image_formatr_instance, 'filter'), 10);
+    // filters now added in init()
 }
