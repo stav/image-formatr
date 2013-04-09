@@ -15,8 +15,6 @@ if (!class_exists("ImageFormatrAdmin")) {
                 'img2short' => "",
                 'img2page'  => "3",
                 'dofx'      => "on",
-                'docontent' => "on",
-                'dowidget'  => "on",
                 'force'     => "",
                 'stdthumb'  => "on",
                 'killanc'   => "on",
@@ -76,17 +74,6 @@ if (!class_exists("ImageFormatrAdmin")) {
                     'title' => 'Force root',
                     'desc'  => 'Force relative parent location of images to the root.',
                     'html'  => "<p>Interpret <code>&lt;img src=&quot;../images/1.jpg&quot;/&gt;</code> as <code>&lt;img src=&quot;/images/1.jpg&quot;/&gt;</code> which helped when I changed my permalinks.</p>",
-                               ),
-                'docontent' => array(
-                    'title' => 'Process page/post content',
-                    'desc'  => 'Should we process the contents of all posts and pages?',
-                    'html'  => "<p>Allows you to turn on/off processing of the images found within the content of the blog`s posts and pages.</p>",
-                               ),
-                'dowidget'  => array(
-                    'title' => 'Process widget content',
-                    'desc'  => 'Should we process the contents of the Wordpress Text widget in the sidebar?',
-                    'link'  => 'http://codex.wordpress.org/WordPress_Widgets#Using_Text_Widgets',
-                    'html'  => "<p>Allows you to turn on/off processing of the images found within the text of the Wordpress Text Widget.</p>",
                                ),
 
                 'stdthumb'  => array(
@@ -199,7 +186,7 @@ if (!class_exists("ImageFormatrAdmin")) {
             $this-> add_settings(array('capatt'  ), 'print_dropdown', 'main_section');
             $this-> add_settings(array('newtitle'), 'print_textbox' , 'main_section');
             $this-> add_settings(array('group'   ), 'print_textbox' , 'main_section');
-            $this-> add_settings(array('yankit', 'killanc', 'dofx', 'docontent', 'dowidget', 'force'), 'print_checkbox', 'main_section');
+            $this-> add_settings(array('yankit', 'killanc', 'dofx', 'force'), 'print_checkbox', 'main_section');
 
             add_settings_section('thumb_section', 'Thumbnail settings', array($this, 'admin_overview'), __FILE__);
             $this-> add_settings(array('stdthumb'), 'print_checkbox', 'thumb_section');
@@ -227,15 +214,15 @@ if (!class_exists("ImageFormatrAdmin")) {
         function print_dropdown ( $f )
         {
             $sel_tit = ($this->get_option($f) == 'title') ? 'selected="selected"' : '';
-            $sel_tit = ($this->get_option($f) == 'alt'  ) ? 'selected="selected"' : '';
-            $sel_tit = ($this->get_option($f) == 'x'    ) ? 'selected="selected"' : '';
+            $sel_alt = ($this->get_option($f) == 'alt'  ) ? 'selected="selected"' : '';
+            $sel_non = ($this->get_option($f) == 'x'    ) ? 'selected="selected"' : '';
             $e = <<< ELEMENT
                 <select
                     id="$f"
                     name="$this->settings_name[$f]"
                   ><option value="title" $sel_tit>title</option>
                    <option value="alt"   $sel_alt>alt</option>
-                   <option value="x"     $sel_no>(x) no caption</option>
+                   <option value="x"     $sel_non>(x) no caption</option>
                 </select>
 ELEMENT;
             $this-> print_element($e, $f);
@@ -365,7 +352,7 @@ INPUT;
 
             // the checkbox fields will not be present in the $input
             // so they need to be manually set to false if absent
-            $checkboxes = array('yankit', 'dofx', 'docontent', 'dowidget', 'killanc', 'force', 'stdthumb', 'uninstal', 'inspect', 'prettyuse', 'flenable');
+            $checkboxes = array('yankit', 'dofx', 'killanc', 'force', 'stdthumb', 'uninstal', 'inspect', 'prettyuse', 'flenable');
             foreach ($checkboxes as $checkbox)
                 if (!array_key_exists($checkbox, $input))
                     $this->options[$checkbox] = '';
@@ -397,41 +384,6 @@ INPUT;
                     </form>
                 </div>
             <?php
-        }
-
-        function activate()
-        {
-            foreach ($this->def_options as $option => $default_value) {
-                $old_key1 = "if_$option"; // legacy option index
-                $old_key2 = "image-formatr_$option"; // legacy option index
-                if (!array_key_exists($option, $this->options) and !is_null($default_value)) {
-                    $old_value = get_option($old_key2) ? get_option($old_key2) : get_option($old_key1); // check for legacy values
-                    $this->options[$option] = $old_value ? $old_value : $default_value;
-                }
-                delete_option($old_key1); // remove legacy options
-                delete_option($old_key2); // remove legacy options
-            }
-
-            // a bit of a hack
-            // if the Additional classes setting is blank (upgrade from
-            // 0.9.7.4 to 0.9.7.5), then let's just pop in the default
-            if (!$this->get_option('addclass'))
-                $this->options['addclass'] = $this->def_options['addclass'];
-
-            update_option($this->settings_name, $this->options);
-            $this->init();
-        }
-
-        function deactivate()
-        {
-            // uninstall all options from the database
-            if ($this->get_option('uninstal')) {
-                delete_option($this->settings_name);
-                // delete any leftover legacy option straggelers
-                // from older versions of the plugin
-                foreach ($this->def_options as $option => $value)
-                    delete_option(IMAGEFORMATR_TEXTDOMAIN."_$option");
-            }
         }
 
     } //End Class ImageFormatrAdmin

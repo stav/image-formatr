@@ -7,4 +7,4 @@ borders and captions.
 See official Wordpress plugin page for more information:
 http://wordpress.org/extend/plugins/image-formatr/
 
-Current version: 1.0
+Version: 1.0.1

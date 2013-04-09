@@ -58,12 +58,6 @@ if (!class_exists("ImageFormatr")) {
             $this->flickr->apikey   =          $this->get_option('flapikey'  );
             $this->flickr->secret   =          $this->get_option('flsecret'  );
 
-            // add filters here dynamically, only if needed
-            if ($this->get_option('docontent'))
-                add_filter('the_content', array($this, 'filter'), 10);
-            if ($this->get_option('dowidget'))
-                add_filter('widget_text', array($this, 'filter'), 10);
-
             // remove class list
             foreach (explode(' ', $this->get_option('remclass')) as $class)
                 if (trim($class))
@@ -101,13 +95,6 @@ if (!class_exists("ImageFormatr")) {
                 $this->addl_img_long  = $this->def_img_long;
                 $this->addl_img_short = $this->def_img_short;
             }
-        }
-
-  //////////////////////////////////////////////// debug
-
-        function widget_text ( $_widget_text )
-        {
-            return $_widget_text;
         }
 
   //////////////////////////////////////////////// parse content methods
@@ -413,8 +400,8 @@ IMAGE;
             $img_style  = "style=\"$width $height\"";
 
             // setup print source and id print variables ///////////////
-            $src    = $param['thumb'] ? $param['thumb'] : $param['src'];
-            $id     = $param['id'] ? "id=\"{$param['id']}\""  : "";
+            $src = $param['thumb'] ? $param['thumb'] : $param['src'];
+            $id  = $param['id'] ? "id=\"{$param['id']}\""  : "";
 
             // edit title print variable ///////////////////////////////
             if (!$param['usemya'])
@@ -461,18 +448,14 @@ ANCHOR;
             if ($anchor)
               $anchor_close = "</a>";
 
-            // setup printing output ///////////////////////////////////
-            ob_start();
-            print <<< IMG
-              <div $id class="{$this->add_class} {$param['class']}" style="width:{$img_width}px">
+            $class = trim("{$this->add_class} {$param['class']}");
+
+            return <<< DIV_A_IMG
+              <div $id class="$class" style="width:{$img_width}px">
                 $anchor<img src="$src" alt="{$param['alt']}" $img_style $title/>$anchor_close
                 $caption
               </div>
-IMG;
-            $output = ob_get_clean();
-
-            // return print output /////////////////////////////////////
-            return $output;
+DIV_A_IMG;
         }
 
     } //End Class ImageFormatr

@@ -38,6 +38,50 @@ if (!class_exists("ImageFormatrBase"))
         }
 
         /**
+         * Activation
+         *
+         * If we are upgrading from an old version, try to copy over the old
+         * settings and remove the old keys from the database.
+         */
+        function activate()
+        {
+            // loop thru the default options and see if we have any keys in the
+            // database with the old names from previous versions of the plugin.
+            foreach ($this->def_options as $option => $default_value) {
+                $old_key1 = "if_$option"; // legacy option key
+                $old_key2 = "image-formatr_$option"; // legacy option key
+
+                // try to pull out the value for the old key and use it
+                if (!array_key_exists($option, $this->options) and !is_null($default_value)) {
+                    $old_value = get_option($old_key2) ? get_option($old_key2) : get_option($old_key1);
+                    $this->options[$option] = $old_value ? $old_value : $default_value;
+                }
+                // remove legacy options
+                delete_option($old_key1);
+                delete_option($old_key2);
+            }
+            update_option($this->settings_name, $this->options);
+            $this->init();
+        }
+
+        /**
+         * Dectivation
+         *
+         * Uninstall the option from the database if the setting says to do so.
+         */
+        function deactivate()
+        {
+            // uninstall all options from the database
+            if ($this->get_option('uninstal')) {
+                delete_option($this->settings_name);
+                // delete any leftover legacy option straggelers
+                // from older versions of the plugin
+                foreach ($this->def_options as $option => $value)
+                    delete_option(IMAGEFORMATR_TEXTDOMAIN."_$option");
+            }
+        }
+
+        /**
          * Add client resources.
          */
         function enqueue ( )

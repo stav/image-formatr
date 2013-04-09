@@ -2,16 +2,16 @@
 Contributors: huntermaster
 Tags: images, caption, formatting, post, page
 Requires at least: 2.9
-Tested up to: 3.5
+Tested up to: 3.5.1
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=sroth77@gmail.com&item_name=Image+Formatr+Wordpress+plugin
-Stable tag: 1.0
+Stable tag: 1.0.1
 
 Formats all content images on a page / post giving them borders and captions.
 
 == Description ==
 
 Image Formatr is a simple plugin that goes through all the content images on
-posts, pages and widgets with zero user changes and:
+posts and pages with zero user changes and:
 
   1. gives them a standardized thumbnail format using CSS
   2. puts a caption underneath each one using the title
@@ -24,8 +24,7 @@ by telling the browser the preferred display dimensions.
 
 = Usage =
 
-*This only applies to the images you put in your content or your widgest, not
-theme graphics.*
+*This only applies to the images you put in your content, not theme graphics.*
 
     <img
       src="/images/picture.jpg"
@@ -205,8 +204,17 @@ overwrite an existing alt?
 
 == Changelog ==
 
+= 1.0.1 =
+  * 2013-03-25 Dynamic filter loading removal patch
+  * reverse moving *add_filter* from *image-formatr* to *class.formatr*
+  * remove admin option to toggle processing of page/post content
+  * remove admin option to toggle processing of WP Text Widget content
+  * remove usage of *output buffering* to build the image div
+  * fix *Caption attribute* dropdown to properly show the option value
+  * move *activate/deactivate* callbacks from class.admin to class.base
+
 = 1.0 =
-  * 2013-03-23
+  * 2013-03-24 Admin UI layout with info popups
   * redo Admin with a better UI using settings information popups
   * add admin option for name to use for default prettyPhoto slideshow group
   * add admin option to toggle processing of page/post content
