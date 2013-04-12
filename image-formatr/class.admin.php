@@ -17,6 +17,7 @@ if (!class_exists("ImageFormatrAdmin")) {
                 'dofx'      => "on",
                 'force'     => "",
                 'stdthumb'  => "on",
+                'attthumb'  => "fullsize",
                 'killanc'   => "on",
                 'inspect'   => "",
                 'addclass'  => "img",
@@ -90,6 +91,27 @@ if (!class_exists("ImageFormatrAdmin")) {
                     'html'  => array('<em>Uses PHP <a href="http://php.net/manual/en/function.getimagesize.php" target="_blank">GetImageSize</a> function.</em>',
                                      'NOTE: may cause pages with lots of images to load slowly.'),
                                ),
+                'imgdefs'   => array(
+                    'name'  => 'imglong, imgshort',
+                    'title' => 'Default dimensions',
+                    'desc'  => 'These values will be used as the width & height.',
+                    'html'  => array('These values will be used as the width &amp; height in pixels by the <em>Auto determine orientation</em> setting which, if disabled will default to the <code>width</code> in the first box and the <code>height</code> in second box.',
+                                     'NOTE: leave one of the boxes blank (or zero) and it will be calculated using the aspect ratio to the other box.'),
+                               ),
+                'imgaddl'   => array(
+                    'name'  => 'img2long, img2short, img2page',
+                    'title' => 'Additional dimensions',
+                    'desc'  => 'These values will be used as the width & height.',
+                    'html'  => array('These dimensions are used if you want to specify different settings for the front page or the single display page or everything else.',
+                                     'These values will be used as the width &amp; height in pixels by the <em>Auto determine orientation</em> setting which, if disabled will default to the <code>width</code> in the first box and the <code>height</code> in second box.',
+                                     'NOTE: leave one of the boxes blank (or zero) and it will be calculated using the aspect ratio to the other box.'),
+                               ),
+                'attthumb'   => array(
+                    'title' => 'Use attached image as thumbnail',
+                    'desc'  => 'Select the size to use for the thumbnail with Wordpress attachment images, if available.',
+                    'html'  => array('If you attached an image to a post/page using the Wordpress <em>Add Media</em> button or through the <em>Media Library</em>, then you can use one of the auto-generated smaller sizes as the thumbnail.',
+                                     'Non-attached images will just use the full-size image as the thumbnail and if the attached image size you specify is not available, the full-size image will also be used.'),
+                               ),
                 'addclass'  => array(
                     'title' => 'Additional classes',
                     'desc'  => 'Enter a space-separated list of classes to add to the image container div.',
@@ -159,22 +181,6 @@ if (!class_exists("ImageFormatrAdmin")) {
                                      'If you`re not sure, don`t check it. If you do want to uninstall this plugin, don`t forget to click <em>Save Changes</em>.',
                                      '<em>Remember: the database is cleaned up when you "Deactivate"</em>.'),
                                ),
-
-                'imgdefs'   => array(
-                    'name'  => 'imglong, imgshort',
-                    'title' => 'Default dimensions',
-                    'desc'  => 'These values will be used as the width & height.',
-                    'html'  => array('These values will be used as the width &amp; height in pixels by the <em>Auto determine orientation</em> setting which, if disabled will default to the <code>width</code> in the first box and the <code>height</code> in second box.',
-                                     'NOTE: leave one of the boxes blank (or zero) and it will be calculated using the aspect ratio to the other box.'),
-                               ),
-                'imgaddl'   => array(
-                    'name'  => 'img2long, img2short, img2page',
-                    'title' => 'Additional dimensions',
-                    'desc'  => 'These values will be used as the width & height.',
-                    'html'  => array('These dimenstions are used if you want to specify different settings for the front page or the single display page or everything else.',
-                                     'These values will be used as the width &amp; height in pixels by the <em>Auto determine orientation</em> setting which, if disabled will default to the <code>width</code> in the first box and the <code>height</code> in second box.',
-                                     'NOTE: leave one of the boxes blank (or zero) and it will be calculated using the aspect ratio to the other box.'),
-                               ),
             );
 
             register_setting(
@@ -183,16 +189,17 @@ if (!class_exists("ImageFormatrAdmin")) {
                 array($this, 'admin_validate')); // sanitize callback function
 
             add_settings_section('main_section', 'Main settings', array($this, 'admin_overview'), __FILE__);
-            $this-> add_settings(array('capatt'  ), 'print_dropdown', 'main_section');
-            $this-> add_settings(array('newtitle'), 'print_textbox' , 'main_section');
-            $this-> add_settings(array('group'   ), 'print_textbox' , 'main_section');
+            $this-> add_settings(array('capatt'  ), 'print_caption_dd', 'main_section');
+            $this-> add_settings(array('newtitle'), 'print_textbox'   , 'main_section');
+            $this-> add_settings(array('group'   ), 'print_textbox'   , 'main_section');
             $this-> add_settings(array('yankit', 'killanc', 'dofx', 'force'), 'print_checkbox', 'main_section');
 
             add_settings_section('thumb_section', 'Thumbnail settings', array($this, 'admin_overview'), __FILE__);
-            $this-> add_settings(array('stdthumb'), 'print_checkbox', 'thumb_section');
-            $this-> add_settings(array('inspect' ), 'print_checkbox', 'thumb_section');
-            $this-> add_settings(array('imgdefs' ), 'print_img_defs', 'thumb_section');
-            $this-> add_settings(array('imgaddl' ), 'print_img_addl', 'thumb_section');
+            $this-> add_settings(array('stdthumb'), 'print_checkbox'  , 'thumb_section');
+            $this-> add_settings(array('inspect' ), 'print_checkbox'  , 'thumb_section');
+            $this-> add_settings(array('imgdefs' ), 'print_img_defs'  , 'thumb_section');
+            $this-> add_settings(array('imgaddl' ), 'print_img_addl'  , 'thumb_section');
+            $this-> add_settings(array('attthumb' ), 'print_attach_dd', 'thumb_section');
 
             add_settings_section('style_section', 'Styling settings', array($this, 'admin_overview'), __FILE__);
             $this-> add_settings(array('addclass', 'remclass', 'xcludclass', 'capclass'), 'print_textbox', 'style_section');
@@ -211,7 +218,7 @@ if (!class_exists("ImageFormatrAdmin")) {
                 add_settings_field( $f, $this-> option_descriptions[$f]['title'], array($this, $callback), __FILE__, $section, $f );
         }
 
-        function print_dropdown ( $f )
+        function print_caption_dd ( $f )
         {
             $sel_tit = ($this->get_option($f) == 'title') ? 'selected="selected"' : '';
             $sel_alt = ($this->get_option($f) == 'alt'  ) ? 'selected="selected"' : '';
@@ -223,6 +230,25 @@ if (!class_exists("ImageFormatrAdmin")) {
                   ><option value="title" $sel_tit>title</option>
                    <option value="alt"   $sel_alt>alt</option>
                    <option value="x"     $sel_non>(x) no caption</option>
+                </select>
+ELEMENT;
+            $this-> print_element($e, $f);
+        }
+
+        function print_attach_dd ( $f )
+        {
+            $sel_thu = ($this->get_option($f) == 'thumbnail') ? 'selected="selected"' : '';
+            $sel_med = ($this->get_option($f) == 'medium'   ) ? 'selected="selected"' : '';
+            $sel_lrg = ($this->get_option($f) == 'large'    ) ? 'selected="selected"' : '';
+            $sel_ful = ($this->get_option($f) == 'fullsize' ) ? 'selected="selected"' : '';
+            $e = <<< ELEMENT
+                <select
+                    id="$f"
+                    name="$this->settings_name[$f]"
+                  ><option value="fullsize"  $sel_ful>full-size</option>
+                   <option value="large"     $sel_lrg>large</option>
+                   <option value="medium"    $sel_med>medium</option>
+                   <option value="thumbnail" $sel_thu>thumbnail</option>
                 </select>
 ELEMENT;
             $this-> print_element($e, $f);

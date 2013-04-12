@@ -4,7 +4,7 @@ Tags: images, caption, formatting, post, page
 Requires at least: 2.9
 Tested up to: 3.5.1
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=sroth77@gmail.com&item_name=Image+Formatr+Wordpress+plugin
-Stable tag: 1.0.1
+Stable tag: 1.1
 
 Formats all content images on a page / post giving them borders and captions.
 
@@ -17,8 +17,7 @@ posts and pages with zero user changes and:
   2. puts a caption underneath each one using the title
   3. makes them linked so they popup in full size
 
-Thumbnails are not generated, the actual image is displayed in a smaller size
-by telling the browser the preferred display dimensions.
+Thumbnails are not generated, but will be used if available in the media library.
 
 *Note: **Flickr** support added in version 0.10.0.*
 
@@ -60,6 +59,7 @@ You can find plugin documentation at http://warriorself.com/blog/about/image-for
   * Supports displaying images from Flickr: &lt;img flickr="1234567890"
     title="The magnificent Ceiba at the Archeological Site of Palenque."&gt;
   * Generates image captions using the image `title` or `alt`
+  * Integrates Wordpress media library thumbnails
   * Shows all content images on the blog as small thumbnails
     (does not create new thumbnail images)
   * Standardizes all thumbnails with zero post changes
@@ -72,7 +72,7 @@ You can find plugin documentation at http://warriorself.com/blog/about/image-for
 
 == Credits ==
 
-Image Formatr is Copyright 2012 [Steven Almeroth](sroth77@gmail.com) and
+Image Formatr is Copyright 2013 [Steven Almeroth](sroth77@gmail.com) and
 licensed under a GPL license
 
 Based on: [image-caption](http://wordpress.org/extend/plugins/image-caption/)
@@ -164,6 +164,7 @@ client.
 == To Do List ==
 
 * add screenshot of output image with caption
+* admin options name should be unique (accross all plugins)
 
 == Current Wishlist ==
 
@@ -203,6 +204,11 @@ overwrite an existing alt?
     work-around is to only use unique single char id fields defined as constants
 
 == Changelog ==
+
+= 1.1 =
+  * 2013-04-12 Media library image thumbnail support
+  * Add admin option to enable using media library auto-generated images as
+    thumbnails
 
 = 1.0.1 =
   * 2013-03-25 Dynamic filter loading removal patch
@@ -322,6 +328,9 @@ overwrite an existing alt?
   * 2010-01-5 Initial alpha release
 
 == Upgrade Notice ==
+
+= 1.1 =
+Media library image thumbnail support
 
 = 1.0 =
 Admin UI restructuring using settings information popups

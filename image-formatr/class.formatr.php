@@ -40,6 +40,7 @@ if (!class_exists("ImageFormatr")) {
             $this->add_class       =            $this->get_option('addclass' ); // list of css classes to add to the container div
             $this->cap_class       =            $this->get_option('capclass' ); // list of css classes to add to the caption div
             $this->def_group       =            $this->get_option('group'    ); // the default PrettyPhoto grouping designator
+            $this->attach_thumb    =            $this->get_option('attthumb' ); // the size of the attachment image to use as the thumbnail
             $this->new_title       =         __($this->get_option('newtitle' )); // the new title replacement
             $this->def_img_width   = abs(intval($this->get_option('imglong'  )));
             $this->def_img_height  = abs(intval($this->get_option('imgshort' )));
@@ -399,8 +400,9 @@ IMAGE;
             }
             $img_style  = "style=\"$width $height\"";
 
-            // setup print source and id print variables ///////////////
-            $src = $param['thumb'] ? $param['thumb'] : $param['src'];
+            // setup source & id print variables ///////////////////////
+            $thumb = $param['thumb'] ? $param['thumb'] : $this-> get_attachment_url($param);
+            $src = $thumb ? $thumb : $param['src'];
             $id  = $param['id'] ? "id=\"{$param['id']}\""  : "";
 
             // edit title print variable ///////////////////////////////
@@ -456,6 +458,35 @@ ANCHOR;
                 $caption
               </div>
 DIV_A_IMG;
+        }
+
+        /**
+         * Get the attached image url in the specified size
+         *
+         * First we look in the class parameter of the image for the attachment
+         * id and failing this we look in the database. Then we use this id to
+         * try and grab the attached image of that size.
+         */
+        function get_attachment_url( $param )
+        {
+            # first check if the attachment id is available in the image class
+            preg_match('/wp-image-(\d+)/', $param['class'], $matches); // alignnone size-full wp-image-3338
+            if (false and count($matches) > 1){
+                $attachment_id = $matches[1];
+            }
+            # otherwise we need to go to the database to find the id
+            else {
+                global $wpdb;
+                $query = "SELECT ID FROM $wpdb->posts WHERE guid='{$param['src']}'";
+                $attachment_id = $wpdb->get_var($query);
+            }
+            # if the image has been attached, we should have the id now
+            if ($attachment_id) {
+                $attachment_img_src = wp_get_attachment_image_src($attachment_id, $this-> attach_thumb);
+
+                if ($attachment_img_src and isset($attachment_img_src[0]))
+                    return $attachment_img_src[0];
+            }
         }
 
     } //End Class ImageFormatr
